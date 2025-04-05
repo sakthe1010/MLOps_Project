@@ -21,20 +21,20 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-96">
-        <h2 className="text-2xl font-bold mb-6 text-center">Login</h2>
+    <div className="flex flex-col items-center justify-center h-screen bg-gradient-to-br from-purple-300 to-pink-400">
+      <div className="bg-white p-8 rounded shadow-lg w-96">
+        <h2 className="text-3xl font-bold mb-6 text-center text-black">Login</h2>
         <input
           type="email"
           placeholder="Email"
-          className="w-full px-4 py-2 mb-4 border border-gray-300 rounded"
+          className="w-full px-4 py-2 mb-4 border border-gray-300 rounded text-black"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
         <input
           type="password"
           placeholder="Password"
-          className="w-full px-4 py-2 mb-4 border border-gray-300 rounded"
+          className="w-full px-4 py-2 mb-4 border border-gray-300 rounded text-black"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
         />
