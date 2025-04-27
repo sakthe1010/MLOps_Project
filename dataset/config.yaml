@@ -1,0 +1,33 @@
+# config.yaml
+
+# Base URL of the site you’re scraping
+base_url: "https://www.ncertpdf.com"
+
+# Global download options
+download:
+  output_dir: "./ncert_pdfs"    # where to save downloaded PDFs
+  concurrency: 4                # how many parallel downloads
+
+# Per-class specification
+classes:
+  # Class 6 – only download Science and Math textbooks
+  "6":
+    subjects:
+      - science
+      - math
+  "7":
+    subjects:
+      - science
+      - math
+  "8":
+    subjects:
+      - science
+      - math
+  "9":
+    subjects:
+      - science
+      - math
+  "10":
+    subjects:
+      - science
+      - math
