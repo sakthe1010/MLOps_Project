@@ -4,12 +4,24 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 
-const grades = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"];
-
-
 export default function GradePage() {
+  const [grades, setGrades] = useState([]);
   const [selectedGrade, setSelectedGrade] = useState("");
   const router = useRouter();
+
+  useEffect(() => {
+    const fetchGrades = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:8000/api/classes");
+        if (!res.ok) throw new Error("Failed to fetch classes");
+        const data = await res.json();
+        setGrades(data.classes.map((c) => `Class ${c}`)); // UI expects "Class 6" format
+      } catch (error) {
+        console.error(error);
+      }
+    };
+    fetchGrades();
+  }, []);
 
   const handleNext = () => {
     if (!selectedGrade) return alert("Please select a grade.");

@@ -26,22 +26,13 @@ export default function ChapterPage() {
 
     const fetchChapters = async () => {
       try {
-        const gradeNumber = selectedGrade.replace("Class ", "").trim();  // Example: "Class 6" -> "6"
+        const gradeNumber = selectedGrade.replace("Class ", "").trim();
 
-        // Map UI names to backend names
-        const subjectMapping = {
-          "Maths": "math",
-          "Science": "science"
-        };
-
-        const dbSubject = subjectMapping[selectedSubject];
-
-        const res = await fetch(`http://127.0.0.1:8000/api/chapters?class=${gradeNumber}&subject=${dbSubject}`);
+        const res = await fetch(`http://127.0.0.1:8000/api/chapters?class=${gradeNumber}&subject=${selectedSubject}`);
         if (!res.ok) throw new Error("Failed to fetch chapters");
 
         const data = await res.json();
 
-        // ✨ Sort chapters numerically based on chapter number
         const sortedChapters = (data.chapters || []).sort((a, b) => {
           const numA = parseInt(a.match(/\d+/)?.[0] || "0", 10);
           const numB = parseInt(b.match(/\d+/)?.[0] || "0", 10);

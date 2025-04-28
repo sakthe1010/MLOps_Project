@@ -4,26 +4,34 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 
-const subjectMap = {
-  "Class 6": ["Maths", "Science"],
-  "Class 7": ["Maths", "Science"],
-  "Class 8": ["Maths", "Science"],
-  "Class 9": ["Maths", "Science"],
-  "Class 10": ["Maths", "Science"]
-};
-
 export default function SubjectPage() {
   const router = useRouter();
   const [grade, setGrade] = useState("");
+  const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState("");
 
   useEffect(() => {
     const gradeFromStorage = localStorage.getItem("selectedGrade");
-    if (!gradeFromStorage) router.push("/grade");
+    if (!gradeFromStorage) {
+      router.push("/grade");
+      return;
+    }
     setGrade(gradeFromStorage);
-  }, [router]);
 
-  const subjects = subjectMap[grade] || [];
+    const fetchSubjects = async () => {
+      try {
+        const gradeNumber = gradeFromStorage.replace("Class ", "").trim(); 
+        const res = await fetch(`http://127.0.0.1:8000/api/subjects?class=${gradeNumber}`);
+        if (!res.ok) throw new Error("Failed to fetch subjects");
+        const data = await res.json();
+        setSubjects(data.subjects);
+      } catch (error) {
+        console.error(error);
+      }
+    };
+
+    fetchSubjects();
+  }, [router]);
 
   const handleNext = () => {
     if (!selectedSubject) return alert("Please select a subject.");
