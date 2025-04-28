@@ -1,0 +1,109 @@
+[
+  {
+    "class": "10",
+    "subject": "math",
+    "chapter": "Chapter 10: circles",
+    "mcqs": [
+      {
+        "question": "The line containing the radius through the point of contact of a tangent is also called the:",
+        "options": {
+          "A": "Secant",
+          "B": "Normal",
+          "C": "Chord",
+          "D": "Diameter"
+        },
+        "answer": "B"
+      },
+      {
+        "question": "A line that intersects a circle at two distinct points is called a:",
+        "options": {
+          "A": "Tangent",
+          "B": "Secant",
+          "C": "Chord",
+          "D": "Radius"
+        },
+        "answer": "B"
+      },
+      {
+        "question": "If two tangents TP and TQ are drawn to a circle with center O from an external point T, and the angle POQ is 110°, what is the measure of angle PTQ?",
+        "options": {
+          "A": "60°",
+          "B": "70°",
+          "C": "80°",
+          "D": "90°"
+        },
+        "answer": "B"
+      },
+      {
+        "question": "How many tangents can be drawn to a circle from a point on the circle?",
+        "options": {
+          "A": "0",
+          "B": "1",
+          "C": "2",
+          "D": "Infinite"
+        },
+        "answer": "B"
+      },
+      {
+        "question": "Opposite sides of a quadrilateral circumscribing a circle subtend what type of angles at the center?",
+        "options": {
+          "A": "Complementary",
+          "B": "Supplementary",
+          "C": "Equal",
+          "D": "Congruent"
+        },
+        "answer": "B"
+      },
+      {
+        "question": "A quadrilateral ABCD is drawn to circumscribe a circle. Which of the following relationships between the sides is always true?",
+        "options": {
+          "A": "AB + BC = CD + DA",
+          "B": "AB + CD = AD + BC",
+          "C": "AB + AD = BC + CD",
+          "D": "AB = CD and AD = BC"
+        },
+        "answer": "B"
+      },
+      {
+        "question": "How many tangents can be drawn to a circle from a point inside the circle?",
+        "options": {
+          "A": "0",
+          "B": "1",
+          "C": "2",
+          "D": "Infinite"
+        },
+        "answer": "A"
+      },
+      {
+        "question": "What is the point where a tangent touches a circle called?",
+        "options": {
+          "A": "Point of intersection",
+          "B": "Point of contact",
+          "C": "Vertex",
+          "D": "Origin"
+        },
+        "answer": "B"
+      },
+      {
+        "question": "What is the definition of a circle?",
+        "options": {
+          "A": "A collection of points equidistant from a center point.",
+          "B": "A shape with four sides and four angles.",
+          "C": "A closed figure with three sides.",
+          "D": "A five-sided polygon."
+        },
+        "answer": "A"
+      },
+      {
+        "question": "A chord of the larger circle touches the smaller circle in two concentric circles.  At the point of contact, the chord of the larger circle is:",
+        "options": {
+          "A": "Trisected",
+          "B": "Bisected",
+          "C": "Divided into a 1:2 ratio",
+          "D": "Not divided"
+        },
+        "answer": "B"
+      }
+    ]
+  }
+]

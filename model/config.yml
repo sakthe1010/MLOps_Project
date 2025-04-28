@@ -1,0 +1,15 @@
+api_key_env_var: "GEMINI_API_KEY"
+
+model: "gemini-1.5-pro-latest"   # or "gemini-1.5-flash-latest"
+
+target_class: "10"
+target_subject: "math"
+target_chapter: "Chapter 10: circles"
+
+generate_mcqs_count: 20    # how many MCQs to generate initially
+select_mcqs_count: 10      # how many random MCQs to select
+
+sleep_between_calls: 1.5   # seconds to sleep to avoid rate limits
+max_retries: 3
+input_file: "ncert_dataset.jsonl"
+output_file: "mcqs_generated.json"
