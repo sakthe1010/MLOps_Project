@@ -65,12 +65,13 @@ export default function ChapterPage() {
     }
   };
 
-  const handleNext = () => {
+  const startTestOrPractice = (mode) => {
     if (selectedChapters.length === 0) {
       alert("Please select at least one chapter.");
       return;
     }
     localStorage.setItem("selectedChapters", JSON.stringify(selectedChapters));
+    localStorage.setItem("mode", mode); // "test" or "practice"
     router.push("/test");
   };
 
@@ -123,12 +124,20 @@ export default function ChapterPage() {
             )}
           </div>
 
-          <button
-            onClick={handleNext}
-            className="w-full bg-blue-500 text-white py-3 rounded hover:bg-blue-600"
-          >
-            Next
-          </button>
+          <div className="flex gap-4">
+            <button
+              onClick={() => startTestOrPractice("test")}
+              className="flex-1 bg-blue-500 text-white py-3 rounded hover:bg-blue-600"
+            >
+              Take Test
+            </button>
+            <button
+              onClick={() => startTestOrPractice("practice")}
+              className="flex-1 bg-green-500 text-white py-3 rounded hover:bg-green-600"
+            >
+              Practice Mode
+            </button>
+          </div>
         </div>
       </div>
     </>

@@ -26,16 +26,10 @@ export default function DashboardPage() {
               📈 View Previous Report
             </button>
             <button
-              onClick={() => router.push("/help")}
-              className="bg-blue-500 text-white py-3 rounded-lg hover:bg-blue-600 transition duration-300"
+              onClick={() => router.push("/profile")}
+              className="bg-purple-500 text-white py-3 rounded-lg hover:bg-purple-600 transition duration-300"
             >
-              ❓ Help
-            </button>
-            <button
-              onClick={() => router.push("/login")}
-              className="bg-red-500 text-white py-3 rounded-lg hover:bg-red-600 transition duration-300"
-            >
-              🔓 Logout
+              👤 My Profile
             </button>
           </div>
         </div>

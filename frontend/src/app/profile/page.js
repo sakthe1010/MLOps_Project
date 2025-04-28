@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Navbar from "../../components/navbar";
 import { useRouter } from "next/navigation";
 
-export default function ReportPage() {
+export default function ProfilePage() {
   const [lastReport, setLastReport] = useState(null);
   const router = useRouter();
 
@@ -18,22 +18,21 @@ export default function ReportPage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-200 to-green-400 p-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-200 to-purple-400 p-6">
         <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-          <h1 className="text-3xl font-bold text-black mb-6">Previous Report</h1>
+          <h1 className="text-3xl font-bold text-black mb-6">My Profile</h1>
 
           {lastReport ? (
             <>
-              <p className="text-lg text-black mb-2">Date: {lastReport.date}</p>
-              <p className="text-lg text-black mb-2">Mode: {lastReport.mode}</p>
-              <p className="text-lg text-black mb-2">Total Questions: {lastReport.totalQuestions}</p>
-              <p className="text-lg text-black mb-2">Correct Answers: {lastReport.correctAnswers}</p>
-              <p className="text-lg text-black mb-2">Wrong Answers: {lastReport.wrongAnswers}</p>
+              <p className="text-lg text-black mb-2">Last Mode Attempted: {lastReport.mode}</p>
               <p className="text-lg text-black mb-2">Accuracy: {lastReport.accuracy}%</p>
+              <p className="text-lg text-black mb-2">Last Attempt: {lastReport.date}</p>
             </>
           ) : (
-            <p className="text-black text-lg mb-4">No previous report available.</p>
+            <p className="text-black text-lg mb-4">No recent activity found.</p>
           )}
+
+          {/* You can add more stats later like total tests attempted etc. */}
 
           <button
             onClick={() => router.push("/dashboard")}
