@@ -1,59 +1,83 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends, Header, Form
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import MCQSet, MCQRequest
 from app.generator import generate_raw_mcqs_from_corpus, parse_mcqs
+from app import auth
+from app.database import Base, engine
+from app import models
+
 
 app = FastAPI()
 
-# ✅ Add CORS middleware
+# 🌟 Create database tables
+models.Base.metadata.create_all(bind=engine)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],   # Allow frontend to connect
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-@app.post("/api/generate-mcqs", response_model=MCQSet)
-def generate_mcqs_endpoint(request: MCQRequest):
-    print(f"🔔 Received: {request.dict()}")
-
+@app.post("/api/register")
+def register(username: str = Form(...), password: str = Form(...)):
     try:
-        counts = {
-            "easy": request.difficulty_counts.easy,
-            "medium": request.difficulty_counts.medium,
-            "hard": request.difficulty_counts.hard
-        }
+        auth.register_user(username, password)
+        return {"msg": "User registered successfully."}
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-        raw_text, model_used = generate_raw_mcqs_from_corpus(
-            class_=request.class_,
-            subject=request.subject,
-            chapter=request.chapter,
-            difficulty_counts=counts
-        )
+@app.post("/api/login")
+def login(username: str = Form(...), password: str = Form(...)):
+    user = auth.authenticate_user(username, password)
+    if not user:
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+    token = auth.create_access_token(data={"sub": username})
+    return {"access_token": token, "token_type": "bearer"}
 
-        print(f"🔸 Raw Gemini text:\n{raw_text}\n---")
+def get_current_user(authorization: str = Header(...)):
+    try:
+        token_type, token = authorization.split()
+        if token_type.lower() != "bearer":
+            raise HTTPException(status_code=401, detail="Invalid token")
+    except ValueError:
+        raise HTTPException(status_code=401, detail="Invalid Authorization header format")
 
-        if not raw_text:
-            raise HTTPException(500, "No raw MCQs returned")
+    username = auth.decode_access_token(token)
+    if username is None:
+        raise HTTPException(status_code=401, detail="Invalid token")
+    return username
 
-        parsed = parse_mcqs(raw_text)
-        print(f"🔹 Parsed MCQs ({len(parsed)}):\n{parsed}")
+@app.post("/api/generate-mcqs", response_model=MCQSet)
+def generate_mcqs_endpoint(request: MCQRequest, current_user: str = Depends(get_current_user)):
+    counts = {
+        "easy": request.difficulty_counts.easy,
+        "medium": request.difficulty_counts.medium,
+        "hard": request.difficulty_counts.hard
+    }
 
-        if not parsed:
-            raise HTTPException(500, "Parsed MCQ list empty")
+    raw_text, model_used = generate_raw_mcqs_from_corpus(
+        class_=request.class_,
+        subject=request.subject,
+        chapter=request.chapter,
+        difficulty_counts=counts
+    )
 
-        return MCQSet(
-            class_=request.class_,
-            subject=request.subject,
-            chapter=request.chapter,
-            difficulty="mixed",
-            model_used=model_used,
-            mcqs=parsed
-        )
-    except HTTPException:
-        raise
-    except Exception as e:
-        print(f"❌ Endpoint error: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
+    if not raw_text:
+        raise HTTPException(500, "No MCQs generated.")
+
+    parsed = parse_mcqs(raw_text)
+
+    if not parsed:
+        raise HTTPException(500, "Parsed MCQ list empty")
+
+    return MCQSet(
+        class_=request.class_,
+        subject=request.subject,
+        chapter=request.chapter,
+        difficulty="mixed",
+        model_used=model_used,
+        mcqs=parsed
+    )
