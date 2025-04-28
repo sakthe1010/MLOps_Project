@@ -3,61 +3,50 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
-import confetti from "canvas-confetti";
 
 export default function TestPage() {
   const router = useRouter();
   const [questions, setQuestions] = useState([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedOption, setSelectedOption] = useState(null);
-  const [selectedAnswers, setSelectedAnswers] = useState([]);
+  const [feedback, setFeedback] = useState("");
+  const [isAnswerChecked, setIsAnswerChecked] = useState(false);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [mode, setMode] = useState("test");
-  const [feedback, setFeedback] = useState("");
-  const [checkedAnswer, setCheckedAnswer] = useState(false);
 
   useEffect(() => {
-    const mcqs = JSON.parse(localStorage.getItem("mcqs") || "[]");
+    const stored = JSON.parse(localStorage.getItem("mcqs") || "[]");
     const selectedMode = localStorage.getItem("mode") || "test";
 
-    if (mcqs.length === 0) {
+    if (stored.length === 0) {
       router.push("/configure");
       return;
     }
 
-    setQuestions(mcqs);
+    setQuestions(stored);
     setMode(selectedMode);
   }, [router]);
 
-  const handleOptionSelect = (option) => {
-    setSelectedOption(option);
+  const handleOptionSelect = (optionKey) => {
+    setSelectedOption(optionKey);
   };
 
   const handleCheckAnswer = () => {
     const currentQuestion = questions[currentQuestionIndex];
-    if (selectedOption === currentQuestion.correct_answer) {
+    if (selectedOption === currentQuestion.answer) {
       setFeedback("✅ Correct!");
-    } else {
-      setFeedback(`❌ Wrong! Correct answer: ${currentQuestion.correct_answer}`);
-    }
-
-    if (mode === "test" && selectedOption === currentQuestion.correct_answer) {
       setScore(score + 1);
+    } else {
+      setFeedback(`❌ Wrong! Correct Answer: ${currentQuestion.answer}`);
     }
-
-    setCheckedAnswer(true);
+    setIsAnswerChecked(true);
   };
 
   const handleNextQuestion = () => {
-    setSelectedAnswers([
-      ...selectedAnswers,
-      { question: questions[currentQuestionIndex].question, selected: selectedOption },
-    ]);
-
     setSelectedOption(null);
     setFeedback("");
-    setCheckedAnswer(false);
+    setIsAnswerChecked(false);
 
     if (currentQuestionIndex + 1 < questions.length) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
@@ -66,77 +55,83 @@ export default function TestPage() {
     }
   };
 
-  const progressPercentage = (currentQuestionIndex / questions.length) * 100;
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-2xl font-bold text-black">
+        Loading questions...
+      </div>
+    );
+  }
 
-  if (questions.length === 0) return <div>Loading questions...</div>;
+  if (showResults) {
+    return (
+      <>
+        <Navbar />
+        <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 to-blue-300 p-6">
+          <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl text-center">
+            <h2 className="text-3xl font-bold text-black mb-6">Test Completed!</h2>
+            <p className="text-xl text-black mb-4">Your Score: {score} / {questions.length}</p>
+            <button
+              onClick={() => router.push("/dashboard")}
+              className="mt-6 bg-blue-600 text-white py-3 px-6 rounded hover:bg-blue-700"
+            >
+              Return to Dashboard
+            </button>
+          </div>
+        </div>
+      </>
+    );
+  }
+
+  const currentQuestion = questions[currentQuestionIndex];
 
   return (
     <>
       <Navbar />
-      {/* Progress Bar */}
-      <div className="w-full max-w-2xl mx-auto mt-4 mb-4">
-        <div className="w-full bg-gray-300 rounded-full h-4">
-          <div
-            className="bg-green-500 h-4 rounded-full transition-all duration-300 ease-out"
-            style={{ width: `${progressPercentage}%` }}
-          ></div>
-        </div>
-      </div>
-
-      {/* Question Area */}
       <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-br from-blue-100 to-indigo-300 p-6">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
           <h2 className="text-xl font-bold text-black mb-4">
             Question {currentQuestionIndex + 1} of {questions.length}
           </h2>
-          <p className="text-black mb-4">{questions[currentQuestionIndex].question}</p>
+          <p className="text-black mb-4">{currentQuestion.question}</p>
 
+          {/* Options */}
           <div className="grid grid-cols-1 gap-4 mb-4">
-            {questions[currentQuestionIndex].options.map((option, idx) => (
+            {Object.entries(currentQuestion.options).map(([key, value], idx) => (
               <button
                 key={idx}
-                onClick={() => handleOptionSelect(option)}
+                onClick={() => handleOptionSelect(key)}
                 className={`w-full p-3 rounded ${
-                  selectedOption === option ? "bg-blue-500 text-white" : "bg-gray-100 text-black"
+                  selectedOption === key ? "bg-blue-500 text-white" : "bg-gray-100 text-black"
                 } hover:bg-gray-300 transition`}
               >
-                {option}
+                {key}. {value}
               </button>
             ))}
           </div>
 
           {/* Feedback */}
-          {mode === "practice" && feedback && (
+          {feedback && (
             <div className="text-xl font-bold text-black text-center mb-4 animate-fade-slide">
               {feedback}
             </div>
           )}
 
           {/* Action Button */}
-          {mode === "practice" ? (
-            !checkedAnswer ? (
-              <button
-                onClick={handleCheckAnswer}
-                disabled={!selectedOption}
-                className="bg-purple-600 text-white py-3 px-6 rounded hover:bg-purple-700 disabled:opacity-50"
-              >
-                Check Answer
-              </button>
-            ) : (
-              <button
-                onClick={handleNextQuestion}
-                className="bg-green-600 text-white py-3 px-6 rounded hover:bg-green-700"
-              >
-                Next Question
-              </button>
-            )
+          {!isAnswerChecked ? (
+            <button
+              onClick={handleCheckAnswer}
+              disabled={!selectedOption}
+              className="w-full bg-purple-600 text-white py-3 rounded hover:bg-purple-700 disabled:opacity-50"
+            >
+              Check Answer
+            </button>
           ) : (
             <button
               onClick={handleNextQuestion}
-              disabled={!selectedOption}
-              className="w-full bg-blue-600 text-white py-3 rounded hover:bg-blue-700 disabled:opacity-50"
+              className="w-full bg-green-600 text-white py-3 rounded hover:bg-green-700"
             >
-              Submit & Next
+              Next Question
             </button>
           )}
         </div>
