@@ -9,7 +9,7 @@ export default function ChapterPage() {
   const [subject, setSubject] = useState("");
   const [grade, setGrade] = useState("");
   const [chapters, setChapters] = useState([]);
-  const [selectedChapters, setSelectedChapters] = useState([]);
+  const [selectedChapter, setSelectedChapter] = useState("");
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
@@ -49,30 +49,18 @@ export default function ChapterPage() {
     fetchChapters();
   }, [router]);
 
-  const toggleChapter = (chapter) => {
-    if (selectedChapters.includes(chapter)) {
-      setSelectedChapters(selectedChapters.filter((ch) => ch !== chapter));
-    } else {
-      setSelectedChapters([...selectedChapters, chapter]);
-    }
-  };
-
-  const handleSelectAll = () => {
-    if (selectedChapters.length === chapters.length) {
-      setSelectedChapters([]);
-    } else {
-      setSelectedChapters(chapters);
-    }
+  const handleChapterSelect = (chapter) => {
+    setSelectedChapter(chapter);
   };
 
   const startTestOrPractice = (mode) => {
-    if (selectedChapters.length === 0) {
-      alert("Please select at least one chapter.");
+    if (!selectedChapter) {
+      alert("Please select a chapter.");
       return;
     }
-    localStorage.setItem("selectedChapters", JSON.stringify(selectedChapters));
-    localStorage.setItem("mode", mode); // "test" or "practice"
-    router.push("/test");
+    localStorage.setItem("selectedChapter", selectedChapter);
+    localStorage.setItem("mode", mode);
+    router.push("/configure");
   };
 
   return (
@@ -81,16 +69,10 @@ export default function ChapterPage() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-pink-200 to-purple-300 p-6">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
           <h1 className="text-2xl font-bold mb-4 text-center text-black">
-            Select Chapters - {grade} {subject}
+            Select Chapter - {grade} {subject}
           </h1>
 
           <div className="flex gap-2 mb-4">
-            <button
-              onClick={handleSelectAll}
-              className="flex-1 bg-yellow-400 text-black py-2 rounded hover:bg-yellow-500"
-            >
-              {selectedChapters.length === chapters.length ? "Unselect All" : "Select All"}
-            </button>
             <input
               type="text"
               placeholder="Search chapters..."
@@ -101,7 +83,7 @@ export default function ChapterPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-3 mb-6">
-            {chapters && chapters.length > 0 ? (
+            {chapters.length > 0 ? (
               chapters
                 .filter((chapter) =>
                   chapter.toLowerCase().includes(searchTerm.toLowerCase())
@@ -109,9 +91,9 @@ export default function ChapterPage() {
                 .map((chapter, index) => (
                   <button
                     key={index}
-                    onClick={() => toggleChapter(chapter)}
+                    onClick={() => handleChapterSelect(chapter)}
                     className={`py-2 px-4 rounded border text-black text-left ${
-                      selectedChapters.includes(chapter)
+                      selectedChapter === chapter
                         ? "bg-purple-600 text-white"
                         : "bg-white border-gray-300"
                     } transition hover:shadow-md`}
