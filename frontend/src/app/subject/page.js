@@ -5,11 +5,11 @@ import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 
 const subjectMap = {
-  "Class 6": ["English", "Maths", "Science", "Social Science"],
-  "Class 7": ["English", "Maths", "Science", "Social Science"],
-  "Class 8": ["English", "Maths", "Science", "Social Science"],
-  "Class 9": ["English", "Maths", "Science", "Social Science"],
-  "Class 10": ["English", "Maths", "Science", "Social Science"],
+  "Class 6": ["Maths", "Science"],
+  "Class 7": ["Maths", "Science"],
+  "Class 8": ["Maths", "Science"],
+  "Class 9": ["Maths", "Science"],
+  "Class 10": ["Maths", "Science"]
 };
 
 export default function SubjectPage() {

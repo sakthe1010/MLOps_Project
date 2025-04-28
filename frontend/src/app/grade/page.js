@@ -4,7 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 
-const grades = Array.from({ length: 12 }, (_, i) => `Class ${i + 1}`);
+const grades = ["Class 6", "Class 7", "Class 8", "Class 9", "Class 10"];
+
 
 export default function GradePage() {
   const [selectedGrade, setSelectedGrade] = useState("");

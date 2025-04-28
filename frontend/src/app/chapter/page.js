@@ -4,57 +4,58 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 
-const chapterData = {
-  English: [
-    "A Letter to God",
-    "Nelson Mandela: Long Walk to Freedom",
-    "Two Stories about Flying",
-    "From the Diary of Anne Frank",
-    "The Hundred Dresses – I",
-    "The Hundred Dresses – II",
-    "Glimpses of India",
-    "Mijbil the Otter",
-    "Madam Rides the Bus",
-    "The Sermon at Benares",
-  ],
-  Maths: [
-    "Real Numbers",
-    "Polynomials",
-    "Pair of Linear Equations in Two Variables",
-    "Quadratic Equations",
-    "Arithmetic Progressions",
-  ],
-  Science: [
-    "Chemical Reactions and Equations",
-    "Acids, Bases, and Salts",
-    "Metals and Non-Metals",
-    "Carbon and Its Compounds",
-    "Periodic Classification of Elements",
-  ],
-  "Social Science": [
-    "Nationalism in Europe",
-    "Nationalism in India",
-    "Making of a Global World",
-    "Industrialisation",
-    "Print Culture and Modern World",
-  ],
-};
-
 export default function ChapterPage() {
   const router = useRouter();
   const [subject, setSubject] = useState("");
+  const [grade, setGrade] = useState("");
   const [chapters, setChapters] = useState([]);
   const [selectedChapters, setSelectedChapters] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
 
   useEffect(() => {
+    const selectedGrade = localStorage.getItem("selectedGrade");
     const selectedSubject = localStorage.getItem("selectedSubject");
-    if (!selectedSubject) {
+
+    if (!selectedGrade || !selectedSubject) {
       router.push("/subject");
-    } else {
-      setSubject(selectedSubject);
-      setChapters(chapterData[selectedSubject] || []);
+      return;
     }
+
+    setGrade(selectedGrade);
+    setSubject(selectedSubject);
+
+    const fetchChapters = async () => {
+      try {
+        const gradeNumber = selectedGrade.replace("Class ", "").trim();  // Example: "Class 6" -> "6"
+
+        // Map UI names to backend names
+        const subjectMapping = {
+          "Maths": "math",
+          "Science": "science"
+        };
+
+        const dbSubject = subjectMapping[selectedSubject];
+
+        const res = await fetch(`http://127.0.0.1:8000/api/chapters?class=${gradeNumber}&subject=${dbSubject}`);
+        if (!res.ok) throw new Error("Failed to fetch chapters");
+
+        const data = await res.json();
+
+        // ✨ Sort chapters numerically based on chapter number
+        const sortedChapters = (data.chapters || []).sort((a, b) => {
+          const numA = parseInt(a.match(/\d+/)?.[0] || "0", 10);
+          const numB = parseInt(b.match(/\d+/)?.[0] || "0", 10);
+          return numA - numB;
+        });
+
+        setChapters(sortedChapters);
+      } catch (error) {
+        console.error(error);
+        setChapters([]);
+      }
+    };
+
+    fetchChapters();
   }, [router]);
 
   const toggleChapter = (chapter) => {
@@ -88,8 +89,9 @@ export default function ChapterPage() {
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-pink-200 to-purple-300 p-6">
         <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
           <h1 className="text-2xl font-bold mb-4 text-center text-black">
-            Select Chapters - {subject}
+            Select Chapters - {grade} {subject}
           </h1>
+
           <div className="flex gap-2 mb-4">
             <button
               onClick={handleSelectAll}
@@ -107,23 +109,27 @@ export default function ChapterPage() {
           </div>
 
           <div className="grid grid-cols-1 gap-3 mb-6">
-            {chapters
-              .filter((chapter) =>
-                chapter.toLowerCase().includes(searchTerm.toLowerCase())
-              )
-              .map((chapter, index) => (
-                <button
-                  key={index}
-                  onClick={() => toggleChapter(chapter)}
-                  className={`py-2 px-4 rounded border text-black text-left ${
-                    selectedChapters.includes(chapter)
-                      ? "bg-purple-600 text-white"
-                      : "bg-white border-gray-300"
-                  } transition hover:shadow-md`}
-                >
-                  {chapter}
-                </button>
-              ))}
+            {chapters && chapters.length > 0 ? (
+              chapters
+                .filter((chapter) =>
+                  chapter.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+                .map((chapter, index) => (
+                  <button
+                    key={index}
+                    onClick={() => toggleChapter(chapter)}
+                    className={`py-2 px-4 rounded border text-black text-left ${
+                      selectedChapters.includes(chapter)
+                        ? "bg-purple-600 text-white"
+                        : "bg-white border-gray-300"
+                    } transition hover:shadow-md`}
+                  >
+                    {chapter}
+                  </button>
+                ))
+            ) : (
+              <p className="text-center text-gray-600">No chapters available. Please check selection.</p>
+            )}
           </div>
 
           <button
