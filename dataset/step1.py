@@ -1,84 +1,94 @@
-import os, re, yaml, requests
+import os
+import re
+import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from concurrent.futures import ThreadPoolExecutor
 
-# load config
-with open("config.yaml") as f:
-    cfg = yaml.safe_load(f)
+# ————— CONFIG —————
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+OUT_DIR    = os.path.join(SCRIPT_DIR, "ncert_pdfs")
+WORKERS   = 6
+INDEX_URL = "https://byjus.com/ncert-books"
+# ————— /CONFIG —————
 
-BASE_URL   = cfg["base_url"].rstrip("/")
-OUT_DIR    = cfg["download"]["output_dir"]
-CONCURRENCY= cfg["download"].get("concurrency", 4)
+def slugify(text: str) -> str:
+    return re.sub(r"[^\w\-]+", "_", text.strip()).strip("_")
 
-def slugify(text):
-    return re.sub(r"[^\w\-]+", "_", text).strip("_")
-
-def list_chapters(class_no, subject):
-    subject_url = f"{BASE_URL}/class-{class_no}/{subject}"
-    print(f"\n[·] Fetching chapters from {subject_url}")
-    resp = requests.get(subject_url)
+def get_html(url: str) -> str:
+    resp = requests.get(url)
     resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
+    return resp.text
 
-    # look for any <a> whose href starts with /class-<N>/<subject>/chapter-
-    href_re = re.compile(rf"^/class-{class_no}/{subject}/chapter-\d+", re.I)
-    anchors = soup.find_all("a", href=href_re)
+def list_subject_pages():
+    """Return { '6': [('maths', url), …], '7': … } by matching link text."""
+    html = get_html(INDEX_URL)
+    soup = BeautifulSoup(html, "html.parser")
+    link_re = re.compile(r"NCERT Books for Class\s+(\d+)\s+(.+)", re.I)
+    pages = {}
+    for a in soup.find_all("a", string=link_re):
+        cls, subj = link_re.match(a.get_text(strip=True)).groups()
+        subj = subj.lower().replace(" ", "-")
+        pages.setdefault(cls, []).append((subj, urljoin(INDEX_URL, a["href"])))
+        print(f"[·] Class {cls} / {subj} → {pages[cls][-1][1]}")
+    return pages
+
+def list_chapter_pdfs(class_no: str, subject: str, page_url: str):
+    """
+    Scrape page_url for ANY <a href> matching chapter-*.pdf,
+    skip if URL contains 'hindi' or 'solution'.
+    """
+    html = get_html(page_url)
+    soup = BeautifulSoup(html, "html.parser")
+    links = soup.find_all("a", href=re.compile(r"chapter-.*\.pdf$", re.I))
 
     chapters = []
-    for a in anchors:
+    for a in links:
         href = a["href"]
-        full_url = urljoin(BASE_URL, href)
-        # try to pull out the <h2> text inside the link
-        h2 = a.find("h2")
-        title = h2.get_text(strip=True) if h2 else href.split("/")[-1]
-        print(f"    → {title}  ->  {full_url}")
-        chapters.append((title, full_url))
+        if re.search(r"hindi|solution", href, re.I):
+            continue
+        full = urljoin(page_url, href)
+        title = a.get_text(strip=True) or os.path.basename(href)
+        chapters.append((title, full))
+        print(f"    → {title}  →  {full}")
 
     if not chapters:
-        print(f"    (!) No chapters found for Class {class_no}, Subject {subject}")
+        print(f"    (!) No chapter-*.pdf links found for Class {class_no}, Subject {subject}")
     return chapters
 
-def download_chapter(class_no, subject, chap_title, chap_url):
-    resp = requests.get(chap_url); resp.raise_for_status()
-    soup = BeautifulSoup(resp.text, "html.parser")
-
-    # find the real Download PDF link
-    dl = soup.find(
-        lambda tag: tag.name=="a"
-        and "href" in tag.attrs
-        and re.search(r"download\s*pdf", tag.get_text(" ", True), re.I)
-    )
-    if not dl:
-        print(f"[✗] No PDF link on {chap_url}")
-        return
-
-    pdf_url = urljoin(BASE_URL, dl["href"])
-    safe_title = slugify(chap_title)
-    save_dir   = os.path.join(OUT_DIR, f"class_{class_no}", subject)
+def download_pdf(task):
+    cls, subj, title, pdf_url = task
+    save_dir = os.path.join(OUT_DIR, f"class_{cls}", subj)
     os.makedirs(save_dir, exist_ok=True)
-    out_path   = os.path.join(save_dir, f"{safe_title}.pdf")
-
-    pdf_data = requests.get(pdf_url); pdf_data.raise_for_status()
-    with open(out_path, "wb") as f:
-        f.write(pdf_data.content)
-    print(f"[✓] Saved → {out_path}")
+    fname    = slugify(title) + ".pdf"
+    out_path = os.path.join(save_dir, fname)
+    try:
+        r = requests.get(pdf_url)
+        r.raise_for_status()
+        with open(out_path, "wb") as f:
+            f.write(r.content)
+        print(f"[✓] Saved {cls}/{subj}/{title}")
+    except Exception as e:
+        print(f"[✗] Failed {title}: {e}")
 
 def main():
-    tasks = []
-    for class_no, opts in cfg["classes"].items():
-        if opts.get("skip"): continue
-        subjects = opts["subjects"]
-        if subjects == "all":
-            subjects = ["science","math","english","hindi","social-science"]  # or fetch dynamically
-        for subj in subjects:
-            for title, url in list_chapters(class_no, subj):
-                tasks.append((class_no, subj, title, url))
+    os.makedirs(OUT_DIR, exist_ok=True)
 
-    print(f"\n[·] Will download {len(tasks)} chapter PDFs with {CONCURRENCY} threads.\n")
-    with ThreadPoolExecutor(max_workers=CONCURRENCY) as exe:
-        for c, s, t, u in tasks:
-            exe.submit(download_chapter, c, s, t, u)
+    print("\n[·] Gathering Class/Subject pages…")
+    subject_pages = list_subject_pages()
+
+    tasks = []
+    for cls in sorted(subject_pages, key=lambda x: int(x)):
+        for subj, url in subject_pages[cls]:
+            print(f"\n[·] Class {cls}, Subject {subj}")
+            for title, pdf in list_chapter_pdfs(cls, subj, url):
+                tasks.append((cls, subj, title, pdf))
+
+    print(f"\n[·] Downloading {len(tasks)} PDFs with {WORKERS} threads…\n")
+    with ThreadPoolExecutor(max_workers=WORKERS) as exe:
+        exe.map(download_pdf, tasks)
+
+    print("\n✅ Done! Textbook PDFs are in", OUT_DIR)
 
 if __name__ == "__main__":
     main()
