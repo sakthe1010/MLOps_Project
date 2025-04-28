@@ -2,13 +2,25 @@ import os
 import re
 from glob import glob
 
+import yaml
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 from PyPDF2 import PdfReader
 import pdfplumber
 
-# --- 1) DB setup ---
-engine = sa.create_engine("sqlite:///ncert_content.db", echo=False)
+# — 1) Load config —
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(SCRIPT_DIR, "config.yaml"), "r") as f:
+    cfg = yaml.safe_load(f)
+
+PDF_BASE   = os.path.join(SCRIPT_DIR, cfg["pdf"]["base_dir"])
+GLOB_PT    = cfg["pdf"]["glob_pattern"]
+DB_URL     = cfg["database"]["url"]
+DB_ECHO    = cfg["database"].get("echo", False)
+FALLBACK   = cfg["pdf"].get("fallback_to_pdfplumber", True)
+
+# — 2) Database setup —
+engine = sa.create_engine(DB_URL, echo=DB_ECHO)
 metadata = sa.MetaData()
 
 pdf_content = sa.Table(
@@ -19,76 +31,97 @@ pdf_content = sa.Table(
     sa.Column("chapter", sa.String,  nullable=False),
     sa.Column("path",    sa.String,  nullable=False),
     sa.Column("content", sa.Text,    nullable=False),
+    sa.UniqueConstraint("class", "subject", "chapter", name="uix_csc")
 )
 
 metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
-session = Session()
 
-# --- 2) Helpers to parse metadata from filename/path ---
-pattern = re.compile(
+# — 3) Metadata parsing —
+METADATA_RE = re.compile(
     r".*/class_(?P<class>\d+)/(?P<subject>[^/]+)/chapter_(?P<chapter_num>\d+)_(?P<chapter>.+)\.pdf$",
     re.I
 )
 
-def parse_metadata(pdf_path):
-    m = pattern.match(pdf_path.replace("\\", "/"))
+def parse_metadata(pdf_path: str):
+    m = METADATA_RE.match(pdf_path.replace("\\", "/"))
     if not m:
         return None
-    data = m.groupdict()
-    title = data.pop("chapter").replace("_", " ").strip()
-    num   = data.pop("chapter_num")
-    data["chapter"] = f"Chapter {num}: {title}"
-    return data
+    d = m.groupdict()
+    title = d.pop("chapter").replace("_", " ").strip()
+    num   = d.pop("chapter_num")
+    d["chapter"] = f"Chapter {num}: {title}"
+    return d
 
-# --- 3) Locate your PDFs directory alongside this script ---
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-BASE_DIR   = os.path.join(SCRIPT_DIR, "ncert_pdfs")
-
-# --- 4) Collect all chapter PDFs ---
-all_pdfs = glob(os.path.join(BASE_DIR, "class_*", "*", "chapter_*.pdf"))
-print(f"\n[·] Total PDFs found: {len(all_pdfs)}\n")
-
-for pdf_path in all_pdfs:
-    meta = parse_metadata(pdf_path)
-    if not meta:
-        print(f"Skipping unrecognized path: {pdf_path}")
-        continue
-
-    print(f"Reading: {pdf_path}")
-
-    # --- 5) Extract text (PyPDF2 first, then pdfplumber fallback) ---
-    full_text = ""
+# — 4) Text extraction —
+def extract_text(pdf_path: str) -> str:
     try:
         reader = PdfReader(pdf_path)
-        pages = [page.extract_text() or "" for page in reader.pages]
-        full_text = "\n".join(pages).strip()
+        pages = [p.extract_text() or "" for p in reader.pages]
+        text = "\n".join(pages).strip()
+        if text:
+            return text
     except Exception as e:
-        print(f"  PyPDF2 failed: {e}\n  Falling back to pdfplumber…")
+        print(f"  PyPDF2 failed on {os.path.basename(pdf_path)}: {e}")
+
+    if FALLBACK:
         try:
             with pdfplumber.open(pdf_path) as pdf:
                 pages = [p.extract_text() or "" for p in pdf.pages]
-            full_text = "\n".join(pages).strip()
+            text = "\n".join(pages).strip()
+            if text:
+                return text
         except Exception as e2:
-            print(f"  pdfplumber also failed: {e2}\n  Skipping file.")
+            print(f"  pdfplumber failed on {os.path.basename(pdf_path)}: {e2}")
+
+    return ""
+
+# — 5) Main ingestion logic with Insert/Update logging —
+def main():
+    os.makedirs(PDF_BASE, exist_ok=True)
+
+    pdf_files = glob(os.path.join(PDF_BASE, GLOB_PT))
+    print(f"\n[·] Found {len(pdf_files)} PDF files to process\n")
+
+    session = Session()
+
+    for pdf_path in pdf_files:
+        meta = parse_metadata(pdf_path)
+        if not meta:
+            print(f"Skipping (unrecognized path): {pdf_path}")
             continue
 
-    if not full_text:
-        print(f"🚫 Skipped empty content: {pdf_path}")
-        continue
+        print(f"Reading: {pdf_path}")
 
-    # --- 6) Insert into database ---
-    ins = pdf_content.insert().values({
-        "class":   meta["class"],
-        "subject": meta["subject"],
-        "chapter": meta["chapter"],
-        "path":    pdf_path,
-        "content": full_text
-    })
-    session.execute(ins)
-    print(f"✅ Inserted: Class {meta['class']} / {meta['subject']} / {meta['chapter']}")
+        content = extract_text(pdf_path)
+        if not content:
+            print(f"🚫 No text extracted, skipping: {pdf_path}")
+            continue
 
-# --- 7) Finalize ---
-session.commit()
-session.close()
-print("\n✅ All PDFs ingestion complete!")
+        # Check if entry exists
+        existing = session.execute(
+            sa.select(pdf_content).where(
+                (pdf_content.c["class"] == meta["class"]) &
+                (pdf_content.c.subject == meta["subject"]) &
+                (pdf_content.c.chapter == meta["chapter"])
+            )
+        ).fetchone()
+
+        stmt = sa.insert(pdf_content).prefix_with("OR REPLACE").values(
+            **meta,
+            path=pdf_path,
+            content=content
+        )
+        session.execute(stmt)
+
+        if existing:
+            print(f"♻️  Updated:  Class {meta['class']} / {meta['subject']} / {meta['chapter']}")
+        else:
+            print(f"➕ Inserted: Class {meta['class']} / {meta['subject']} / {meta['chapter']}")
+
+    session.commit()
+    session.close()
+    print("\n✅ All PDFs ingestion complete!")
+
+if __name__ == "__main__":
+    main()

@@ -1,33 +1,21 @@
 # config.yaml
 
-# Base URL of the site you’re scraping
-base_url: "https://www.ncertpdf.com"
-
-# Global download options
+# 1) download (step1.py)
 download:
-  output_dir: "./ncert_pdfs"    # where to save downloaded PDFs
-  concurrency: 4                # how many parallel downloads
+  base_url:    "https://byjus.com/ncert-books"
+  output_dir:  "ncert_pdfs"
+  concurrency: 6
 
-# Per-class specification
-classes:
-  # Class 6 – only download Science and Math textbooks
-  "6":
-    subjects:
-      - science
-      - math
-  "7":
-    subjects:
-      - science
-      - math
-  "8":
-    subjects:
-      - science
-      - math
-  "9":
-    subjects:
-      - science
-      - math
-  "10":
-    subjects:
-      - science
-      - math
+# 2) database + pdf ingestion (step2.py)
+database:
+  url:  "sqlite:///ncert_content.db"
+  echo: false
+
+pdf:
+  base_dir:     "ncert_pdfs"
+  glob_pattern: "class_*/*/chapter_*.pdf"
+  fallback_to_pdfplumber: true
+
+# 3) export (step3.py)
+export:
+  jsonl_path: "ncert_dataset.jsonl"
