@@ -1,9 +1,19 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import JSONResponse
+from fastapi.middleware.cors import CORSMiddleware
 from app.schemas import MCQSet, MCQRequest
 from app.generator import generate_raw_mcqs_from_corpus, parse_mcqs
 
 app = FastAPI()
+
+# ✅ Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],   # Allow frontend to connect
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.post("/api/generate-mcqs", response_model=MCQSet)
 def generate_mcqs_endpoint(request: MCQRequest):
