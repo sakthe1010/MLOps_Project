@@ -2,87 +2,66 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Navbar from "../../components/navbar";
 
 const subjectMap = {
-  "Class 1": ["English", "Maths", "EVS"],
-  "Class 2": ["English", "Maths", "EVS"],
-  "Class 3": ["English", "Maths", "EVS"],
-  "Class 4": ["English", "Maths", "EVS"],
-  "Class 5": ["English", "Maths", "EVS"],
   "Class 6": ["English", "Maths", "Science", "Social Science"],
   "Class 7": ["English", "Maths", "Science", "Social Science"],
   "Class 8": ["English", "Maths", "Science", "Social Science"],
   "Class 9": ["English", "Maths", "Science", "Social Science"],
   "Class 10": ["English", "Maths", "Science", "Social Science"],
-  "Class 11": ["Maths", "Physics", "Chemistry", "Biology", "Economics"],
-  "Class 12": ["Maths", "Physics", "Chemistry", "Biology", "Economics"],
 };
 
 export default function SubjectPage() {
   const router = useRouter();
-  const [selectedSubject, setSelectedSubject] = useState("");
   const [grade, setGrade] = useState("");
+  const [selectedSubject, setSelectedSubject] = useState("");
 
   useEffect(() => {
     const gradeFromStorage = localStorage.getItem("selectedGrade");
-    if (!gradeFromStorage) {
-      router.push("/grade");
-    } else {
-      setGrade(gradeFromStorage);
-    }
+    if (!gradeFromStorage) router.push("/grade");
+    setGrade(gradeFromStorage);
   }, [router]);
 
   const subjects = subjectMap[grade] || [];
 
-  const handleSelect = (subject) => {
-    setSelectedSubject(subject);
-  };
-
   const handleNext = () => {
-    if (!selectedSubject) {
-      alert("Please select a subject.");
-      return;
-    }
+    if (!selectedSubject) return alert("Please select a subject.");
     localStorage.setItem("selectedSubject", selectedSubject);
     router.push("/chapter");
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-green-300 to-blue-400">
-      <div className="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 className="text-xl font-bold mb-6 text-center text-black">
-          Select Subject for <span className="text-blue-600">{grade}</span>
-        </h1>
-        <div className="grid grid-cols-1 gap-3 mb-4">
-          {subjects.map((subject) => (
-            <button
-              key={subject}
-              onClick={() => handleSelect(subject)}
-              className={`py-2 px-4 rounded border text-black ${
-                selectedSubject === subject
-                  ? "bg-blue-600 text-white"
-                  : "bg-white border-gray-300"
-              }`}
-            >
-              {subject}
-            </button>
-          ))}
-        </div>
-        <div className="flex justify-between items-center gap-4 mt-4">
-          <button
-            onClick={() => router.push("/grade")}
-            className="w-1/2 bg-gray-300 text-black py-2 rounded hover:bg-gray-400"
-          >
-            Back
-          </button>
+    <>
+      <Navbar />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 to-blue-400 p-6">
+        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
+          <h1 className="text-xl font-bold mb-6 text-center text-black">
+            Select Subject for {grade}
+          </h1>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            {subjects.map((subject) => (
+              <div
+                key={subject}
+                onClick={() => setSelectedSubject(subject)}
+                className={`cursor-pointer p-6 rounded-lg shadow-md hover:shadow-xl transition ${
+                  selectedSubject === subject
+                    ? "bg-blue-600 text-white"
+                    : "bg-white text-black"
+                }`}
+              >
+                <h3 className="text-lg font-semibold text-center">{subject}</h3>
+              </div>
+            ))}
+          </div>
           <button
             onClick={handleNext}
-            className="w-1/2 bg-purple-600 text-white py-2 rounded hover:bg-purple-700"
+            className="w-full bg-purple-600 text-white py-3 rounded hover:bg-purple-700"
           >
             Next
           </button>
         </div>
       </div>
-    </div>
+    </>
   );
 }
