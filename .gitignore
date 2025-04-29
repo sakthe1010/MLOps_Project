@@ -1,1 +1,6 @@
 dataset/ncert_pdfs/*
+node_modules/
+.next/
+*.gz
+*.log
+.cache/
