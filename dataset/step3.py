@@ -1,32 +1,37 @@
-import sqlalchemy as sa
-import json
-import csv
 import os
+import yaml
+import json
+import sqlalchemy as sa
 
-# --- Connect to your database ---
-engine = sa.create_engine("sqlite:///ncert_content.db", echo=False)
-conn = engine.connect()
+# --- Load config.yaml ---
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+with open(os.path.join(SCRIPT_DIR, "config.yaml"), "r") as f:
+    config = yaml.safe_load(f)
 
-# --- Fetch all records ---
-result = conn.execute(sa.text("SELECT class, subject, chapter, content FROM pdf_content ORDER BY class, subject, chapter"))
+# --- Read config entries ---
+DB_URL = config["database"]["url"]
+JSONL_PATH = os.path.join(SCRIPT_DIR, config["export"]["jsonl_path"])
 
-records = result.fetchall()
+# --- Connect to SQLite database ---
+engine = sa.create_engine(DB_URL, echo=False)
+with engine.connect() as conn:
+    result = conn.execute(sa.text(
+        "SELECT class, subject, chapter, content FROM pdf_content ORDER BY class, subject, chapter"
+    ))
+    rows = result.fetchall()
 
-print(f"\n[·] Total records to export: {len(records)}\n")
+print(f"\n[·] Total records to export: {len(rows)}\n")
 
-# --- 1. Export to JSONL format ---
-jsonl_path = "ncert_dataset.jsonl"
-with open(jsonl_path, "w", encoding="utf-8") as f_jsonl:
-    for row in records:
-        entry = {
-            "class": row["class"],
+# --- Write JSONL output ---
+with open(JSONL_PATH, "w", encoding="utf-8") as f_jsonl:
+    for row in rows:
+        obj = {
+            "class":   row["class"],
             "subject": row["subject"],
             "chapter": row["chapter"],
             "content": row["content"]
         }
-        f_jsonl.write(json.dumps(entry, ensure_ascii=False) + "\n")
+        f_jsonl.write(json.dumps(obj, ensure_ascii=False) + "\n")
 
-print(f"✅ Exported JSONL: {jsonl_path}")
-
-conn.close()
-print("\n✅ Dataset export complete!")
+print(f"✅ Exported JSONL: {JSONL_PATH}")
+print("✅ Dataset export complete!")
