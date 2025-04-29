@@ -1,8 +1,23 @@
 dataset/ncert_pdfs/*
-node_modules/
-.next/
-*.gz
-*.log
-.cache/
+
+# ----  DVC-tracked raw data (new path) ----
+backend/airflow/dags/ncert_pdfs/
+backend/airflow/dags/ncert_content.db
+backend/airflow/dags/ncert_dataset.jsonl
+# -----------------------------------------
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Node / Next.js
+frontend/node_modules/
+frontend/.next/
+
+# Airflow runtime noise
+backend/airflow/logs/
+
+# Misc
 .env
-*.pyc
+.DS_Store

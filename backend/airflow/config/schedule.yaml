@@ -1,0 +1,2 @@
+# Cron expression for once-a-day at midnight
+run_interval: "0 0 * * *"

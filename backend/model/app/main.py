@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 # ✅ Load NCERT dataset at startup
-with open("ncert_dataset.jsonl", "r", encoding="utf-8") as f:
+with open("../airflow/dags/ncert_dataset.jsonl", "r", encoding="utf-8") as f:
     dataset = [json.loads(line) for line in f]
 
 # ✅ Register user
