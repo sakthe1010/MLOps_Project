@@ -1,0 +1,5 @@
+outs:
+- md5: 8520f07d0b1b186314e4e66cc999cbae
+  size: 13697024
+  hash: md5
+  path: ncert_content.db
