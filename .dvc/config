@@ -1,0 +1,6 @@
+[core]
+    remote = storage
+[cache]
+    shared = group
+['remote "storage"']
+    url = ../dvc_storage
