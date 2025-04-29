@@ -4,3 +4,4 @@ python-dotenv
 google-generativeai
 pyyaml
 pydantic
+psycopg2-binary
