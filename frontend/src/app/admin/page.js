@@ -7,7 +7,12 @@ export default function AdminRootPage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/admin/login");
+    const isAdmin = localStorage.getItem("isAdmin");
+    if (isAdmin === "true") {
+      router.replace("/admin/dashboard");
+    } else {
+      router.replace("/admin/login");
+    }
   }, [router]);
 
   return null;

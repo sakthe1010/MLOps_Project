@@ -78,7 +78,7 @@ export default function GradePage() {
 
   if (loadingGrades) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-yellow-300 to-orange-400 p-6">
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-amber-200 to-rose-200 p-6">
         <div className="flex flex-col items-center">
           <div className="w-16 h-16 border-4 border-dashed rounded-full border-white animate-spin"></div>
           <p className="text-xl font-semibold text-black mt-6">

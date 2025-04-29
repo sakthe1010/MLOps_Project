@@ -1,4 +1,5 @@
 "use client";
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
@@ -30,7 +31,8 @@ export default function RegisterPage() {
 
       if (!res.ok) throw new Error("Registration failed");
 
-      alert("Registration successful. Please log in.");
+      alert("🎉 Registration successful! Please login.");
+      localStorage.setItem("userName", name); // ✅ Save user's name for Profile Page
       router.push("/login");
     } catch (err) {
       setError("Registration error: " + err.message);
@@ -38,9 +40,11 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 to-blue-400">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 to-blue-400 p-6">
       <div className="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-        <h2 className="text-3xl font-bold mb-6 text-center text-black">Register</h2>
+        <h2 className="text-3xl font-bold text-center text-black mb-6 animate-fade-down">
+          Register
+        </h2>
         <form onSubmit={handleRegister} className="flex flex-col gap-4">
           <input
             type="text"
@@ -75,9 +79,10 @@ export default function RegisterPage() {
             required
           />
           {error && <p className="text-red-500 text-sm">{error}</p>}
+
           <button
             type="submit"
-            className="bg-blue-500 text-white py-3 rounded hover:bg-blue-600"
+            className="bg-blue-500 hover:bg-blue-600 text-white py-3 rounded font-semibold transition-all duration-300"
           >
             Register
           </button>

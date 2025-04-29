@@ -8,6 +8,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [lastReport, setLastReport] = useState(null);
+  const [userName, setUserName] = useState("");
 
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
@@ -30,9 +31,12 @@ export default function ProfilePage() {
   useEffect(() => {
     if (checkedAuth) {
       const reportData = JSON.parse(localStorage.getItem("lastReport") || "null");
+      const storedName = localStorage.getItem("userName") || "User";
+
       if (reportData) {
         setLastReport(reportData);
       }
+      setUserName(storedName);
     }
   }, [checkedAuth]);
 
@@ -48,8 +52,10 @@ export default function ProfilePage() {
     <>
       <Navbar />
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-200 to-purple-400 p-6">
-        <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full text-center">
-          <h1 className="text-3xl font-bold text-black mb-6">My Profile</h1>
+        <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center">
+          <h1 className="text-3xl font-bold text-black mb-6 animate-fade-down">
+            Welcome, {userName}!
+          </h1>
 
           {lastReport ? (
             <>

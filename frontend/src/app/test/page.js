@@ -16,7 +16,6 @@ export default function TestPage() {
   const [showResults, setShowResults] = useState(false);
   const [mode, setMode] = useState("test");
 
-  // Token and MCQs check
   useEffect(() => {
     const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
@@ -73,6 +72,15 @@ export default function TestPage() {
     if (currentQuestionIndex + 1 < questions.length) {
       setCurrentQuestionIndex((prev) => prev + 1);
     } else {
+      const report = {
+        date: new Date().toLocaleString(),
+        mode: mode,
+        totalQuestions: questions.length,
+        correctAnswers: score,
+        wrongAnswers: questions.length - score,
+        accuracy: Math.round((score / questions.length) * 100),
+      };
+      localStorage.setItem("lastReport", JSON.stringify(report));
       setShowResults(true);
     }
   };
@@ -99,7 +107,7 @@ export default function TestPage() {
         <Navbar />
         <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-300 to-blue-300 p-6">
           <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl text-center">
-            <h2 className="text-3xl font-bold text-black mb-6">Test Completed!</h2>
+            <h2 className="text-3xl font-bold text-black mb-6">🎉 Test Completed!</h2>
             <p className="text-xl text-black mb-4">
               Your Score: {score} / {questions.length}
             </p>
