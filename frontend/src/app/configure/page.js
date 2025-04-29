@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
@@ -58,11 +57,7 @@ export default function ConfigurePage() {
       class_: grade,
       subject: subject,
       chapter: chapter,
-      difficulty_counts: {
-        easy: easy,
-        medium: medium,
-        hard: hard
-      }
+      difficulty_counts: { easy, medium, hard }
     };
   };
 
@@ -73,6 +68,13 @@ export default function ConfigurePage() {
     }
 
     const payload = preparePayload();
+    const token = localStorage.getItem("token"); // ✅ Get token from login
+
+    if (!token) {
+      alert("You are not logged in. Please log in again.");
+      router.push("/login");
+      return;
+    }
 
     console.log("Prepared Payload:", payload);
 
@@ -83,6 +85,7 @@ export default function ConfigurePage() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}` // ✅ Attach Bearer token
         },
         body: JSON.stringify(payload),
       });
@@ -93,7 +96,6 @@ export default function ConfigurePage() {
       console.log("Received questions:", data);
 
       localStorage.setItem("mcqs", JSON.stringify(data.mcqs || data.questions || []));
-
       router.push("/test");
     } catch (error) {
       console.error(error);
@@ -126,6 +128,7 @@ export default function ConfigurePage() {
           </h1>
 
           <div className="grid grid-cols-1 gap-4 mb-6">
+            {/* Display selected grade/subject/chapter */}
             <div>
               <label className="block text-black mb-2">Selected Class</label>
               <input type="text" value={grade} disabled className="w-full p-3 border rounded bg-gray-100 text-black" />
@@ -139,6 +142,7 @@ export default function ConfigurePage() {
               <input type="text" value={chapter} disabled className="w-full p-3 border rounded bg-gray-100 text-black" />
             </div>
 
+            {/* Practice mode difficulty selector */}
             {mode === "practice" && (
               <div>
                 <label className="block text-black mb-2">Select Difficulty</label>
@@ -155,6 +159,7 @@ export default function ConfigurePage() {
               </div>
             )}
 
+            {/* Number of questions selector */}
             <div>
               <label className="block text-black mb-2">Number of Questions (Max 20)</label>
               <input

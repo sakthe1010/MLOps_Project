@@ -22,10 +22,13 @@ export default function LoginPage() {
       if (!res.ok) throw new Error("Login failed");
 
       const data = await res.json();
-      localStorage.setItem("token", data.access_token);
-      router.push("/dashboard"); // or wherever the user should land
+      localStorage.setItem("token", data.access_token); // ✅ Save token
+
+      alert("Login successful! Redirecting...");
+      router.push("/configure"); // ✅ Redirect after login
     } catch (err) {
-      setError("Invalid email or password");
+      console.error(err);
+      setError("Invalid email or password. Please try again.");
     }
   };
 
