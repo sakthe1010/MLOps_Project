@@ -14,7 +14,7 @@ export default function LoginPage() {
     formData.append("password", password);
 
     try {
-      const res = await fetch("https://nwnktpr5-8000.inc1.devtunnels.ms/api/login", {
+      const res = await fetch("http://10.42.0.1:8000/api/login", {
         method: "POST",
         body: formData,
       });
@@ -25,7 +25,7 @@ export default function LoginPage() {
       localStorage.setItem("token", data.access_token); // ✅ Save token
 
       alert("Login successful! Redirecting...");
-      router.push("/configure"); // ✅ Redirect after login
+      router.push("/dashboard"); // ✅ Redirect after login
     } catch (err) {
       console.error(err);
       setError("Invalid email or password. Please try again.");

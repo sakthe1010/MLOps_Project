@@ -23,7 +23,7 @@ export default function RegisterPage() {
     formData.append("name", name);
 
     try {
-      const res = await fetch("https://nwnktpr5-8000.inc1.devtunnels.ms/api/register", {
+      const res = await fetch("http://10.42.0.1:8000/api/register", {
         method: "POST",
         body: formData,
       });

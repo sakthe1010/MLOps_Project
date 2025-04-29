@@ -7,17 +7,29 @@ export default function HelpPage() {
     <>
       <Navbar />
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-300 to-pink-400 p-6">
-        <div className="bg-white p-8 rounded-lg shadow-md w-full max-w-2xl">
-          <h1 className="text-2xl font-bold mb-6 text-center text-black">How to Use EduTest App</h1>
-          <ul className="list-disc list-inside text-gray-800 space-y-4">
-            <li>🧑‍🎓 Log in using your registered email and password.</li>
-            <li>🏫 Select your Grade/Class.</li>
-            <li>📚 Choose your Subject (e.g., Science, Maths).</li>
-            <li>📖 Pick the Chapters you want to be tested on.</li>
-            <li>🧠 Take the multiple-choice test.</li>
-            <li>📈 View your performance report and chapter-wise recommendations.</li>
-            <li>📋 Use Dashboard to retake tests or view help anytime.</li>
+        <div className="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-3xl">
+          <h1 className="text-3xl font-bold text-center text-black mb-8 animate-fade-down">
+            📚 How to Use EduTest
+          </h1>
+
+          <ul className="list-disc list-inside space-y-4 text-lg text-gray-800">
+            <li>🧑‍🎓 <strong>Login</strong> using your registered email and password.</li>
+            <li>🏫 <strong>Select your Grade/Class.</strong></li>
+            <li>📚 <strong>Choose your Subject</strong> (e.g., Science, Maths).</li>
+            <li>📖 <strong>Pick the Chapters</strong> you want to practice or be tested on.</li>
+            <li>🧠 <strong>Take the multiple-choice test</strong> or practice session.</li>
+            <li>📈 <strong>View your performance report</strong> after finishing the test.</li>
+            <li>🏠 <strong>Use Dashboard</strong> to retake tests or review reports anytime.</li>
           </ul>
+
+          <div className="text-center mt-10">
+            <button
+              onClick={() => window.history.back()}
+              className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:scale-105 transition-all duration-300"
+            >
+              Go Back
+            </button>
+          </div>
         </div>
       </div>
     </>
