@@ -3,4 +3,4 @@
 [cache]
     shared = group
 ['remote "storage"']
-    url = ../dvc_storage
+    url = /home/akshay/dvc_storage
