@@ -1,8 +1,5 @@
 "use client";
-
 import { useState } from "react";
-import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../../lib/firebase"; 
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -12,9 +9,21 @@ export default function LoginPage() {
   const router = useRouter();
 
   const handleLogin = async () => {
+    const formData = new FormData();
+    formData.append("username", email);
+    formData.append("password", password);
+
     try {
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push("/dashboard");
+      const res = await fetch("https://nwnktpr5-8000.inc1.devtunnels.ms/api/login", {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error("Login failed");
+
+      const data = await res.json();
+      localStorage.setItem("token", data.access_token);
+      router.push("/dashboard"); // or wherever the user should land
     } catch (err) {
       setError("Invalid email or password");
     }
@@ -45,6 +54,16 @@ export default function LoginPage() {
         >
           Log In
         </button>
+
+        <p className="mt-4 text-sm text-center text-black">
+          New user?{" "}
+          <button
+            className="text-blue-600 underline"
+            onClick={() => router.push("/register")}
+          >
+            Register here
+          </button>
+        </p>
       </div>
     </div>
   );
