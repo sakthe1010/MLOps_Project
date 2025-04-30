@@ -207,21 +207,28 @@ Base URL: `/api`
 | - Prometheus Metrics Exposure                  |
 +--------------------+---------------------------+
        |                               |
-       | SQLAlchemy ORM (PostgreSQL)   | SQLAlchemy ORM (SQLite)
+       | SQLAlchemy ORM (PostgreSQL)   | Access to Logs
        |                               |
 +------v-------+              +--------v---------+
-| PostgreSQL   |              | SQLite DB        |
-| (Users,      |              | (NCERT PDF       |
-| Reports,     |              |  Content)        |
-| Questions,   |              +--------^---------+
-| Metadata)    |                       |
-+--------------+              +--------v---------+
-                              | Airflow DAG      |
+| PostgreSQL   |              | DAG Logs (JSON)  |
+| (Users,      |              | (Pipeline logs)  |
+| Reports,     |              +--------^---------+
+| Questions,   |                       |
+| Metadata)    |              +--------v---------+
++--------------+              | Airflow DAG      |
                               |------------------|
                               | - PDF Scraping   |
                               | - PDF Parsing    |
                               | - JSONL Export   |
+                              | - Log Generation |
                               +------------------+
+                              |
+                              |
+                     +--------v---------+
+                     | SQLite DB        |
+                     | (NCERT PDF       |
+                     |  Content)        |
+                     +------------------+
 ```
 
 ---
