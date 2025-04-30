@@ -1,0 +1,7 @@
+stages:
+  preprocess:
+    cmd: python backend/airflow/dags/step1.py
+    deps:
+    - backend/airflow/dags/ncert_pdfs
+    outs:
+    - data/01_clean.jsonl
