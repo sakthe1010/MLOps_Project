@@ -1,4 +1,4 @@
-# 📉 Low Level Design (LLD): API I/O Specifications
+# Low Level Design (LLD): API I/O Specifications
 
 ---
 
@@ -22,7 +22,7 @@
 ```
 **Used in:** /login page → saved in localStorage
 
-## 2. 2. POST /api/register
+## 2. POST /api/register
 
 **Purpose:** Register a new user
 
