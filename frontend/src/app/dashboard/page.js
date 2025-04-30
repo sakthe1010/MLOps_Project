@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
+import withAuth from "../../components/withAuth";
 
-export default function DashboardPage() {
+ function DashboardPage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
 
@@ -12,7 +13,7 @@ export default function DashboardPage() {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
 
     if (!token) {
-      alert("⚠️ Please login first to access the Dashboard.");  // ✅ Warning before redirect
+      alert("⚠️ Please login first to access the Dashboard.");
       router.replace('/login');
     } else {
       setCheckedAuth(true);
@@ -43,16 +44,16 @@ export default function DashboardPage() {
               📚 Start a New Test
             </button>
             <button
-              onClick={() => router.push("/report")}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:scale-105 transition-all duration-300"
-            >
-              📈 View Previous Report
-            </button>
-            <button
               onClick={() => router.push("/profile")}
               className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:scale-105 transition-all duration-300"
             >
               👤 My Profile
+            </button>
+            <button
+              onClick={() => router.push("/review-wrong")}
+              className="bg-red-500 hover:bg-red-600 text-white font-semibold py-3 rounded-xl shadow-lg hover:scale-105 transition-all duration-300"
+            >
+              ❌ Review Wrong Questions
             </button>
           </div>
         </div>
@@ -60,3 +61,5 @@ export default function DashboardPage() {
     </>
   );
 }
+
+export default withAuth(DashboardPage);

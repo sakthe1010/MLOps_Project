@@ -5,45 +5,35 @@ import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 
 export default function ProfilePage() {
+  const [reports, setReports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const username = typeof window !== "undefined" ? localStorage.getItem("username") : null;
   const router = useRouter();
-  const [checkedAuth, setCheckedAuth] = useState(false);
-  const [lastReport, setLastReport] = useState(null);
-  const [userName, setUserName] = useState("");
 
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
-
-    if (!token) {
-      setTimeout(() => {
-        const retryToken = localStorage.getItem("token");
-        if (!retryToken) {
-          alert("⚠️ Please login first to view your Profile.");
-          router.replace("/login");
-        } else {
-          setCheckedAuth(true);
-        }
-      }, 300);
-    } else {
-      setCheckedAuth(true);
+    if (!username) {
+      alert("⚠️ Please login first.");
+      router.push("/login");
+      return;
     }
-  }, [router]);
 
-  useEffect(() => {
-    if (checkedAuth) {
-      const reportData = JSON.parse(localStorage.getItem("lastReport") || "null");
-      const storedName = localStorage.getItem("userName") || "User";
+    fetch(`http://10.42.0.1:8000/api/user/reports?username=${username}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch reports");
+        return res.json();
+      })
+      .then((data) => setReports(data))
+      .catch((err) => {
+        console.error(err);
+        alert("Failed to load profile data.");
+      })
+      .finally(() => setLoading(false));
+  }, [username, router]);
 
-      if (reportData) {
-        setLastReport(reportData);
-      }
-      setUserName(storedName);
-    }
-  }, [checkedAuth]);
-
-  if (!checkedAuth) {
+  if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-2xl font-bold text-black">
-        Checking login...
+      <div className="min-h-screen flex items-center justify-center text-xl text-black">
+        Loading your test history...
       </div>
     );
   }
@@ -51,28 +41,39 @@ export default function ProfilePage() {
   return (
     <>
       <Navbar />
-      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-purple-200 to-purple-400 p-6">
-        <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md w-full text-center">
-          <h1 className="text-3xl font-bold text-black mb-6 animate-fade-down">
-            Welcome, {userName}!
-          </h1>
+      <div className="min-h-screen bg-gradient-to-br from-yellow-100 to-pink-200 p-6">
+        <div className="max-w-4xl mx-auto bg-white p-6 rounded-xl shadow-lg">
+          <h1 className="text-3xl font-bold mb-6 text-black">📘 Your Test History</h1>
 
-          {lastReport ? (
-            <>
-              <p className="text-lg text-black mb-2">Last Mode Attempted: {lastReport.mode}</p>
-              <p className="text-lg text-black mb-2">Accuracy: {lastReport.accuracy}%</p>
-              <p className="text-lg text-black mb-2">Last Attempt: {lastReport.date}</p>
-            </>
+          {reports.length === 0 ? (
+            <p className="text-black text-lg">No tests taken yet.</p>
           ) : (
-            <p className="text-black text-lg mb-4">No recent activity found.</p>
+            <ul className="space-y-4">
+              {reports.map((report) => (
+                <li
+                  key={report.id}
+                  onClick={() => router.push(`/profile/report/${report.id}`)}
+                  className="cursor-pointer border p-4 rounded-lg bg-gray-100 hover:bg-gray-200 transition"
+                >
+                  <div className="text-black">
+                    <p className="font-semibold text-lg">
+                      {report.context_json.subject?.toUpperCase()} - {report.context_json.chapter}
+                    </p>
+                    <p className="text-sm">
+                      Class {report.context_json.class_} | Mode:{" "}
+                      <span className="font-medium">{report.mode}</span>
+                    </p>
+                    <p className="text-sm text-gray-700">
+                      Score: {report.score} / {report.total}
+                    </p>
+                    <p className="text-sm text-gray-600">
+                      Date: {new Date(report.date).toLocaleString()}
+                    </p>
+                  </div>
+                </li>
+              ))}
+            </ul>
           )}
-
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="mt-6 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:scale-105 transition-all duration-300"
-          >
-            Back to Dashboard
-          </button>
         </div>
       </div>
     </>

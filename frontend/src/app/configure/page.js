@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import withAuth from "../../components/withAuth";
 
-export default function ConfigurePage() {
+function ConfigurePage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [grade, setGrade] = useState("");
@@ -238,3 +239,5 @@ export default function ConfigurePage() {
     </>
   );
 }
+
+export default withAuth(ConfigurePage);

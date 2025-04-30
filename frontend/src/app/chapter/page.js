@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
+import withAuth from "../../components/withAuth";
 
-export default function ChapterPage() {
+function ChapterPage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [subject, setSubject] = useState("");
@@ -195,3 +196,4 @@ export default function ChapterPage() {
     </>
   );
 }
+export default withAuth(ChapterPage);
