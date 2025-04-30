@@ -17,9 +17,8 @@ export default function ConfigurePage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
-  // Token check
   useEffect(() => {
-    const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    const token = localStorage.getItem("token");
 
     if (!token) {
       setTimeout(() => {
@@ -36,7 +35,6 @@ export default function ConfigurePage() {
     }
   }, [router]);
 
-  // Fetch stored info
   useEffect(() => {
     if (checkedAuth) {
       const selectedGrade = localStorage.getItem("selectedGrade");
@@ -68,9 +66,11 @@ export default function ConfigurePage() {
       else if (difficulty === "Medium") medium = questionCount;
       else if (difficulty === "Hard") hard = questionCount;
       else if (difficulty === "Adaptive") {
-        easy = Math.floor(questionCount / 3);
-        medium = Math.floor(questionCount / 3);
-        hard = questionCount - easy - medium;
+        const total = Math.min(Math.ceil(questionCount * 1.5), 30);
+        const ratioSum = 7 + 5 + 3;
+        easy = Math.round((7 / ratioSum) * total);
+        medium = Math.round((5 / ratioSum) * total);
+        hard = total - easy - medium;
       }
     }
 
@@ -78,7 +78,9 @@ export default function ConfigurePage() {
       class_: grade,
       subject: subject,
       chapter: chapter,
-      difficulty_counts: { easy, medium, hard }
+      difficulty_counts: { easy, medium, hard },
+      mode: mode,
+      difficulty: difficulty // ✅ Include this explicitly for test page to read
     };
   };
 
@@ -97,7 +99,14 @@ export default function ConfigurePage() {
       return;
     }
 
-    console.log("Prepared Payload:", payload);
+    localStorage.setItem("generationContext", JSON.stringify(payload));
+
+    // ✅ Store adaptiveCount only if adaptive selected
+    if (payload.mode === "practice" && payload.difficulty === "Adaptive") {
+      localStorage.setItem("adaptiveCount", questionCount);
+    }
+
+    console.log("📦 Generation Context Saved:", payload);
 
     try {
       setIsLoading(true);
@@ -113,14 +122,12 @@ export default function ConfigurePage() {
           },
           body: JSON.stringify(payload),
         },
-        10000 // 10 seconds timeout
+        30000
       );
 
       if (!res.ok) throw new Error("Failed to generate questions.");
 
       const data = await res.json();
-      console.log("Received questions:", data);
-
       localStorage.setItem("mcqs", JSON.stringify(data.mcqs || data.questions || []));
       router.push("/test");
     } catch (err) {
@@ -212,7 +219,7 @@ export default function ConfigurePage() {
                     min="1"
                     max="20"
                     value={questionCount}
-                    onChange={(e) => setQuestionCount(e.target.value)}
+                    onChange={(e) => setQuestionCount(Number(e.target.value))}
                     className="w-full p-3 border rounded text-black"
                   />
                 </div>
