@@ -2,13 +2,28 @@ from fastapi import FastAPI, HTTPException, Depends, Header, Form, Query
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from app.schemas import MCQSet, MCQRequest
+from app.schemas import MCQSet, MCQRequest, ReportSchema, ReportResponse
 from app.generator import generate_raw_mcqs_from_corpus, parse_mcqs
-from app import auth, models
+from app import auth, models, database
+from starlette_exporter import PrometheusMiddleware, handle_metrics
+from sqlalchemy import engine_from_config
 from app.database import Base, engine, get_db
 import json
+import uuid
+from typing import List, Dict
 
 app = FastAPI()
+
+# automatically instruments all routes under /,
+# grouping by path and method
+app.add_middleware(
+    PrometheusMiddleware,
+    app_name="ncert_mcq_api",
+    group_paths=True,
+)
+
+# Expose /metrics for Prometheus to scrape
+app.add_route("/metrics", handle_metrics)
 
 # 🌟 Create database tables
 models.Base.metadata.create_all(bind=engine)
@@ -122,3 +137,69 @@ def get_chapters(class_no: str = Query(..., alias="class"), subject: str = Query
     if not chapters:
         raise HTTPException(status_code=404, detail="No chapters found.")
     return {"chapters": chapters}
+
+@app.post(
+    "/api/user/report",
+    response_model=ReportResponse,
+    summary="Save a test/practice report"
+)
+def save_report(
+    report: ReportSchema,
+    db: Session = Depends(get_db)
+):
+    new = models.ReportModel(**report.dict())
+    db.add(new)
+    db.commit()
+    db.refresh(new)
+    return new
+
+@app.get(
+    "/api/user/reports",
+    response_model=List[ReportResponse],
+    summary="Fetch last 10 reports for a user"
+)
+def get_reports(
+    username: str = Query(..., description="Username to fetch reports for"),
+    db: Session = Depends(get_db)
+):
+    return (
+        db.query(models.ReportModel)
+          .filter(models.ReportModel.username == username)
+          .order_by(models.ReportModel.date.desc())
+          .limit(10)
+          .all()
+    )
+
+@app.get(
+    "/api/user/reports/{report_id}",
+    response_model=ReportResponse,
+    summary="Fetch a single report by ID"
+)
+def get_report(
+    report_id: uuid.UUID,
+    db: Session = Depends(get_db)
+):
+    rpt = db.query(models.ReportModel).get(report_id)
+    if not rpt:
+        raise HTTPException(404, "Report not found")
+    return rpt
+
+@app.get(
+    "/api/user/wrong-questions",
+    response_model=List[Dict],
+    summary="Aggregate all wrong questions for a user"
+)
+def get_wrong_questions(
+    username: str = Query(..., description="Username to fetch wrong questions for"),
+    db: Session = Depends(get_db)
+):
+    reports = (
+        db.query(models.ReportModel)
+          .filter(models.ReportModel.username == username)
+          .order_by(models.ReportModel.date.desc())
+          .all()
+    )
+    out = []
+    for r in reports:
+        out.extend(r.wrong_questions)
+    return out

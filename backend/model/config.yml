@@ -13,5 +13,5 @@ select_mcqs_count: 10
 sleep_between_calls: 1.5
 max_retries: 3
 
-input_file: "ncert_dataset.jsonl"
+input_file: "../airflow/dags/ncert_dataset.jsonl"
 output_file: "mcqs_generated.json"

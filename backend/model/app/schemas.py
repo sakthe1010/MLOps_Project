@@ -1,5 +1,7 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Dict, List
+import uuid
+from datetime import datetime
 
 class DifficultyRequest(BaseModel):
     easy: int = 0
@@ -25,3 +27,18 @@ class MCQRequest(BaseModel):
     subject: str
     chapter: str
     difficulty_counts: DifficultyRequest
+
+class ReportSchema(BaseModel):
+    username: str
+    mode: str
+    score: int
+    total: int
+    date: datetime
+    context_json: Dict
+    wrong_questions: List[Dict]
+
+class ReportResponse(ReportSchema):
+    id: uuid.UUID
+
+    model_config = ConfigDict(from_attributes=True)
+

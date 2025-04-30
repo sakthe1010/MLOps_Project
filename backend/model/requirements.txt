@@ -1,7 +1,13 @@
 fastapi
-uvicorn
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+python-jose[cryptography]
+passlib[bcrypt]
+PyYAML
 python-dotenv
 google-generativeai
-pyyaml
+starlette-exporter
+prometheus-client
 pydantic
-psycopg2-binary
+python-multipart
