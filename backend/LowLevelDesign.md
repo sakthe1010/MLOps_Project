@@ -131,7 +131,6 @@ Base URL: `/api`
   "wrong_questions": []
 }
 ```
-
 - **Output**: (saved report with UUID)
 
 #### GET `/user/reports?username=user1`
@@ -174,7 +173,7 @@ Base URL: `/api`
 
 ### step2_ingest
 
-- Parses PDFs, extracts text, and stores in DB.
+- Parses PDFs, extracts text, and stores in SQLite DB.
 
 ### step3_export
 
@@ -192,37 +191,37 @@ Base URL: `/api`
 ## Architecture Diagram
 
 ```plaintext
-+---------------------------------------------+
-|                 Web Frontend                |
-+--------------------+------------------------+
++------------------------------------------------+
+|                 Web Frontend                   |
++--------------------+---------------------------+
                      |
                      |
            RESTful APIs via HTTP
                      |
-+--------------------v------------------------+
-|                FastAPI Backend              |
-|---------------------------------------------|
-| - JWT Authentication                        |
-| - MCQ Generation (Gemini API Integration)   |
-| - User Management & Reports                 |
-| - Prometheus Metrics Exposure               |
-+--------------------+------------------------+
-                     |
-          SQLAlchemy ORM (PostgreSQL)
-                     |
-+--------------------v------------------------+
-|                 PostgreSQL                  |
-| (Users, Reports, Questions, Metadata)       |
-+---------------------------------------------+
-                     |
-                     |
-+--------------------v------------------------+
-|                 Airflow DAG                 |
-|---------------------------------------------|
-| - step1 (PDF Scraping & Downloading)        |
-| - step2 (PDF Parsing & DB ingestion)        |
-| - step3 (JSONL Export for MCQs)             |
-+---------------------------------------------+
++--------------------v---------------------------+
+|                FastAPI Backend                 |
+|------------------------------------------------|
+| - JWT Authentication                           |
+| - MCQ Generation (Gemini API Integration)      |
+| - User Management & Reports                    |
+| - Prometheus Metrics Exposure                  |
++--------------------+---------------------------+
+       |                               |
+       | SQLAlchemy ORM (PostgreSQL)   | SQLAlchemy ORM (SQLite)
+       |                               |
++------v-------+              +--------v---------+
+| PostgreSQL   |              | SQLite DB        |
+| (Users,      |              | (NCERT PDF       |
+| Reports,     |              |  Content)        |
+| Questions,   |              +--------^---------+
+| Metadata)    |                       |
++--------------+              +--------v---------+
+                              | Airflow DAG      |
+                              |------------------|
+                              | - PDF Scraping   |
+                              | - PDF Parsing    |
+                              | - JSONL Export   |
+                              +------------------+
 ```
 
 ---
