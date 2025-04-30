@@ -1,177 +1,115 @@
-## High-Level Design Document
+# High-Level Design (HLD) Document
+
+## Project Overview
+
+This project implements an end-to-end pipeline to automatically generate Multiple-Choice Questions (MCQs) from NCERT textbooks using AI, with an intuitive web interface and robust backend infrastructure.
 
 ---
 
-### 1. Introduction
+## Project Objectives
 
-This document describes the high-level architecture, components, data flows, and interactions for the MCQ Generator backend service. The goal is to provide a clear overview of how requests travel from clients through the FastAPI application, into the database and AI generator, and back—while also illustrating how observability and security are integrated.
-
----
-
-### 2. Architecture Overview
-
-```mermaid
-flowchart LR
-    Client[Web / Mobile Client]
-    subgraph API Layer
-      APIGW[(FastAPI UVicorn)]
-      Auth[Authentication Service]
-      Metrics[/metrics\n(Prometheus Endpoint)/]
-    end
-    subgraph Business Logic
-      Generator[MCQ Generator Module]
-      Parser[MCQ Parser]
-      Reports[Reports Module]
-    end
-    subgraph Data Layer
-      DB[(PostgreSQL)]
-      Corpus[/NCERT JSONL Corpus/]
-    end
-    subgraph Observability
-      Prometheus[(Prometheus)]
-      Grafana[(Grafana)]
-    end
-
-    Client --> APIGW
-    APIGW --> Auth
-    APIGW --> Metrics
-    APIGW --> Generator
-    Generator --> Parser
-    Parser --> Reports
-    Reports --> DB
-    Generator -->|reads| Corpus
-    APIGW --> DB
-    Prometheus -->|scrapes| Metrics
-    Grafana -->|queries| Prometheus
-```
+- Automate MCQ generation using NCERT textbook content.
+- Provide interactive web frontend for users.
+- Ensure robust backend architecture with authentication and API integration.
+- Enable continuous monitoring and pipeline orchestration through Airflow.
+- Adhere to MLOps best practices for scalability, reproducibility, and maintainability.
 
 ---
 
-### 3. Components
+## Architecture Overview
 
-#### 3.1 FastAPI Application
-- **UVicorn** server hosting  
-- **Endpoints**:
-  - `/api/register`, `/api/login` → user management
-  - `/api/generate-mcqs` → invokes MCQ generation
-  - `/api/classes`, `/api/subjects`, `/api/chapters` → metadata
-  - `/api/user/report*` → report CRUD
-  - `/metrics` → Prometheus scrape endpoint
-- **Middleware**:
-  - CORS (allow all origins for frontend)
-  - `PrometheusMiddleware` for HTTP metrics
-  - Startup event: `Base.metadata.create_all(bind=engine)`
+The project comprises three main components:
 
-#### 3.2 Authentication
-- **JWT-based** via `python-jose`
-- **Password hashing**: `passlib[bcrypt]`
-- `create_access_token` / `decode_access_token`  
-- Protected routes depend on `get_current_user` header guard
+1. **Data Preparation Pipeline** (Airflow)
+2. **Backend Service** (FastAPI)
+3. **Frontend Interface** (Interactive Web Portal)
 
-#### 3.3 MCQ Generator Module
-- **`generator.py`**:
-  - Loads NCERT corpus (JSONL) once into memory  
-  - Builds prompts, calls Google Gemini via `google-generativeai`
-  - Retries: pro-model → flash-model fallback on rate limits  
-  - Persists raw responses to disk for audit (`raw_responses/`)
-- **Parser**:
-  - Regex-based extraction of question blocks  
-  - Normalizes options, difficulty, and answer
+### 1. Data Preparation Pipeline
 
-#### 3.4 Reports Module
-- **SQLAlchemy model** `ReportModel`  
-  - UUID PK, `username`, `mode`, `score`, `total`, `date`, JSON columns  
-- **Pydantic schemas** `ReportSchema` / `ReportResponse`  
-- **Endpoints**:
-  - `POST /api/user/report`
-  - `GET /api/user/reports?username=…`
-  - `GET /api/user/reports/{id}`
-  - `GET /api/user/wrong-questions?username=…`
+This pipeline prepares and structures data for MCQ generation.
 
-#### 3.5 Data Storage
-- **PostgreSQL**:
-  - Tables: `users`, `reports`
-  - Connection via `psycopg2-binary`
-  - Schema auto-creation (no migrations; future: Alembic)
+- **Step 1 (Data Collection)**:
+  - Scrapes NCERT PDFs from online sources.
+  - Concurrently downloads and stores PDFs locally.
 
-- **NCERT Corpus**:
-  - JSONL file loaded at startup from configurable path
+- **Step 2 (Data Extraction & Ingestion)**:
+  - Extracts text content from PDFs using PyPDF2 with fallback via pdfplumber.
+  - Stores structured data in SQLite (or PostgreSQL) database using SQLAlchemy ORM.
 
-#### 3.6 Observability
-- **Prometheus**:
-  - Scrapes `/metrics` every 15s
-  - Exports metrics:  
-    - `starlette_requests_total`, `starlette_request_duration_seconds`,  
-    - `starlette_requests_in_progress`, process & Python GC stats
-- **Grafana**:
-  - Data source: Prometheus  
-  - Custom dashboard panels for request rate, p95/p99 latency, in-flight
+- **Step 3 (Data Export)**:
+  - Exports structured data from the database to JSONL format, facilitating downstream AI processing.
+
+This pipeline is orchestrated via Apache Airflow.
+
+### 2. Backend Service
+
+The backend is powered by FastAPI, providing RESTful APIs for frontend consumption.
+
+- **Authentication & User Management**:
+  - Secure JWT-based authentication.
+  - Password hashing using bcrypt.
+  
+- **MCQ Generation**:
+  - Integrates Google's Gemini API for generative AI.
+  - Dynamically generates MCQs based on difficulty levels requested.
+  - Parses raw AI responses into structured, JSON-based MCQs.
+
+- **Data Storage**:
+  - Uses PostgreSQL managed via SQLAlchemy for storing user data, MCQs, and user activity reports.
+
+- **Monitoring & Observability**:
+  - Prometheus instrumentation with Grafana dashboards for real-time monitoring.
+
+### 3. Frontend Interface
+
+- Interactive and intuitive user interface.
+- Allows users to register, log in, and generate MCQs.
+- Presents structured MCQs clearly and interactively.
+- Supports responsive UI design for seamless user experience.
 
 ---
 
-### 4. Data Flows
+## Technology Stack
 
-1. **Client Request**  
-   User hits a protected endpoint (e.g. `/api/generate-mcqs`) with Bearer token.
-2. **Auth Check**  
-   `get_current_user` validates JWT → rejects missing/invalid with 401.
-3. **Business Logic**  
-   - Generator loads corpus → sends prompt to Gemini → receives raw text.  
-   - Parser extracts MCQ objects.
-4. **Persistence**  
-   For reports, data written to PostgreSQL via SQLAlchemy session.
-5. **Response**  
-   FastAPI serializes Pydantic models to JSON and returns to client.
-6. **Metrics**  
-   Each HTTP request is instrumented; Prometheus scrapes metrics; Grafana visualizes.
-
----
-
-### 5. Technology Stack
-
-| Layer            | Technology                   |
-|------------------|------------------------------|
-| Web Framework    | FastAPI + Uvicorn            |
-| Database         | PostgreSQL                   |
-| ORM              | SQLAlchemy                   |
-| Auth             | JWT (`python-jose`), Bcrypt  |
-| MCQ Generation   | Google Gemini API            |
-| Config           | YAML (`PyYAML`) + `.env`     |
-| Metrics Exporter | Prometheus client, starlette-exporter |
-| Monitoring UI    | Grafana                      |
-| Testing          | Pytest, FastAPI TestClient   |
+| Component                  | Technology Used                                   |
+|----------------------------|---------------------------------------------------|
+| Web Framework              | FastAPI                                           |
+| Database                   | PostgreSQL, SQLite                                |
+| ORM                        | SQLAlchemy                                        |
+| Containerization           | Docker, Docker Compose                            |
+| Orchestration & Scheduling | Apache Airflow                                    |
+| Monitoring                 | Prometheus, Grafana                               |
+| Authentication             | JWT, bcrypt                                       |
+| AI Generation              | Google Gemini API                                 |
+| Data Processing            | PyPDF2, pdfplumber, BeautifulSoup, Requests       |
+| Version Control            | Git, Git LFS                                      |
+| Experiment Tracking        | MLflow (planned integration)                      |
 
 ---
 
-### 6. Deployment
+## Deployment Architecture
 
-- **Containerization** (future): Docker + Docker Compose  
-  - Services: `app`, `db`, `node_exporter`, `postgres_exporter`, `prometheus`, `grafana`  
-- **Startup**: `uvicorn app.main:app` auto-creates tables  
-- **Scaling**: Stateless API allows horizontal scaling behind a load balancer; DB as a single primary (future: replicas)
-
----
-
-### 7. Security & Configuration
-
-- **Secrets** via environment variables (`.env`)  
-- **CORS** wide-open (for prototyping; restrict in production)  
-- **HTTPS** termination at ingress or via reverse proxy  
-- **Future**:  
-  - Rate limiting  
-  - Role-based access control  
-  - API gateway integration
+- Containerized deployment using Docker and orchestrated via Docker Compose.
+- CI/CD pipelines planned for automated deployment and version management.
+- Airflow for workflow automation, running daily scheduled data ingestion and export tasks.
 
 ---
 
-### 8. Next Steps
+## Security and Compliance
 
-- **Schema migrations** using Alembic  
-- **CI/CD** pipelines (GitHub Actions + DVC)  
-- **Alerts** via Prometheus Alertmanager  
-- **Enhanced logging** (structured logs, correlation IDs)  
-- **API versioning** and backward compatibility  
+- API keys and credentials managed securely via environment variables.
+- JWT-based authentication with bcrypt hashing.
+- Regular database backups and secure handling of user data.
 
 ---
 
-*This high-level design establishes a modular, observable, and secure foundation for the MCQ Generator service.*
+## Future Enhancements
+
+- Advanced user analytics for deeper insights into MCQ effectiveness.
+- Transition to a fully PostgreSQL-backed data pipeline for greater scalability.
+
+---
+
+## Conclusion
+
+This design ensures a robust, scalable, and maintainable architecture, adhering closely to MLOps best practices, enabling efficient MCQ generation, seamless user interaction, and effective monitoring.
