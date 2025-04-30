@@ -13,6 +13,7 @@ services:
       - db
     volumes:
       - ../airflow/dags:/airflow/dags:ro
+      - .:/app
     restart: unless-stopped
 
   db:

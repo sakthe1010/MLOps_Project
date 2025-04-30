@@ -11,3 +11,5 @@ starlette-exporter
 prometheus-client
 pydantic
 python-multipart
+pytest
+httpx
