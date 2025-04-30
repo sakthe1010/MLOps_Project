@@ -21,6 +21,7 @@ backend/airflow/logs/
 # Misc
 .env
 .DS_Store
+.vscode/
 
 backend/model/ncert_dataset.jsonl
 backend/model/users.db
