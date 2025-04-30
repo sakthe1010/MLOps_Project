@@ -24,7 +24,6 @@ Ensure the frontend UI behaves as expected, supports adaptive learning logic, an
 | LoginPage | ✅ |
 | Dashboard | ✅ |
 | ProfilePage | ✅ |
-| ReviewWrongPage | ✅ |
 
 ## Acceptance Criteria
 

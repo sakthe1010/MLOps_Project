@@ -8,6 +8,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [authorized, setAuthorized] = useState(null);
   const [chapterData, setChapterData] = useState([]);
+  const [pipelineData, setPipelineData] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -25,6 +26,7 @@ export default function AdminDashboard() {
       router.replace("/admin/login");
     } else if (authorized === true) {
       fetchChapters();
+      fetchPipelineRuns();
     }
   }, [authorized, router]);
 
@@ -37,6 +39,16 @@ export default function AdminDashboard() {
       console.error("Failed to fetch chapters", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPipelineRuns = async () => {
+    try {
+      const res = await fetch("/api/pipeline/runs");
+      const data = await res.json();
+      setPipelineData(data);
+    } catch (error) {
+      console.error("Failed to fetch pipeline runs", error);
     }
   };
 
@@ -79,7 +91,7 @@ export default function AdminDashboard() {
           Last Refreshed: {new Date().toLocaleString()}
         </p>
 
-        <div className="grid md:grid-cols-2 gap-6">
+        <div className="grid md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white p-6 rounded-lg shadow-md">
             <h3 className="text-lg font-semibold mb-2 text-black">Total Chapters per Class</h3>
             <ul className="list-disc list-inside text-black text-sm">
@@ -99,8 +111,34 @@ export default function AdminDashboard() {
           </div>
         </div>
 
-        {/* Optional: raw dump for debug */}
-        {/* <pre className="mt-8 text-xs bg-white p-4 rounded">{JSON.stringify(chapterData, null, 2)}</pre> */}
+        {/* ✅ ML Pipeline Runs Section */}
+        <div className="bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-xl font-bold mb-4 text-black">🧠 ML Pipeline Activity (Airflow)</h3>
+          {pipelineData.length === 0 ? (
+            <p className="text-black">No pipeline runs found.</p>
+          ) : (
+            <table className="w-full border border-gray-300 text-sm text-black">
+              <thead className="bg-gray-100">
+                <tr>
+                  <th className="p-2 text-left">Pipeline</th>
+                  <th className="p-2 text-left">Status</th>
+                  <th className="p-2 text-left">Run Time</th>
+                  <th className="p-2 text-left">Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pipelineData.map((p, i) => (
+                  <tr key={i} className="border-t border-gray-200">
+                    <td className="p-2">{p.dag_id}</td>
+                    <td className={`p-2 font-bold ${p.status === "success" ? "text-green-600" : "text-red-500"}`}>{p.status}</td>
+                    <td className="p-2">{new Date(p.run_time).toLocaleString()}</td>
+                    <td className="p-2">{p.duration}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
       </div>
     </>
   );

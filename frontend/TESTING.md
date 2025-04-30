@@ -4,7 +4,7 @@ This document explains the testing strategy, tools, test cases, and results for 
 
 ---
 
-## ✅ Test Coverage
+## Test Coverage
 
 We implemented unit tests for the most critical frontend screens using Jest and React Testing Library.
 
@@ -19,7 +19,7 @@ We implemented unit tests for the most critical frontend screens using Jest and 
 
 ---
 
-## 🧪 Toolchain
+## Toolchain
 
 | Tool                      | Purpose                                        |
 |---------------------------|------------------------------------------------|
@@ -29,7 +29,7 @@ We implemented unit tests for the most critical frontend screens using Jest and 
 
 ---
 
-## 🧱 Setup Files
+## Setup Files
 
 - **`jest.config.js`** – base configuration with JSDOM, mocks, and transform overrides.
 - **`jest.setup.js`** – silences `alert()`, mocks `fetch()`, and `next/navigation`.
@@ -37,7 +37,7 @@ We implemented unit tests for the most critical frontend screens using Jest and 
 
 ---
 
-## 🔧 Run Tests
+## Run Tests
 
 ```bash
 npm install      # (first time)
@@ -58,7 +58,7 @@ Tests:       4 passed, 4 total
 
 ---
 
-## 🧪 Test Plan
+## Test Plan
 
 ### 1. Functional Test Cases
 
@@ -83,7 +83,7 @@ Tests:       4 passed, 4 total
 
 ---
 
-## 🚧 Notes
+## Notes
 
 - We disabled `withAuth` for tests by directly importing the pages
 - `next/font` errors were fixed by renaming `babel.config.js → babel.config.test.js`
@@ -91,7 +91,7 @@ Tests:       4 passed, 4 total
 
 ---
 
-## ✅ Summary
+## Summary
 
 | Metric              | Value   |
 |---------------------|---------|
