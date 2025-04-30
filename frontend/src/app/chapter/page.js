@@ -6,7 +6,7 @@ import Navbar from "../../components/navbar";
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
 import withAuth from "../../components/withAuth";
 
-function ChapterPage() {
+export default function ChapterPage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [subject, setSubject] = useState("");
@@ -196,4 +196,3 @@ function ChapterPage() {
     </>
   );
 }
-export default withAuth(ChapterPage);

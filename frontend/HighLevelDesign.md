@@ -1,4 +1,4 @@
-# 📘 High Level Design (HLD)
+# High Level Design (HLD)
 
 ## System Overview
 This system is split into two major services:

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 import withAuth from "../../components/withAuth";
 
- function DashboardPage() {
+export default function DashboardPage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
 
@@ -61,5 +61,3 @@ import withAuth from "../../components/withAuth";
     </>
   );
 }
-
-export default withAuth(DashboardPage);

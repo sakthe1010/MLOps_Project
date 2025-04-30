@@ -6,7 +6,7 @@ import Navbar from "../../components/navbar";
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
 import withAuth from "../../components/withAuth";
 
-function ConfigurePage() {
+export default function ConfigurePage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [grade, setGrade] = useState("");
@@ -239,5 +239,3 @@ function ConfigurePage() {
     </>
   );
 }
-
-export default withAuth(ConfigurePage);

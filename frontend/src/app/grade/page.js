@@ -4,9 +4,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Navbar from "../../components/navbar";
 import { fetchWithTimeout } from "../utils/fetchWithTimeout";
-import withAuth from "../../components/withAuth";
 
-function GradePage() {
+export default function GradePage() {
   const router = useRouter();
   const [checkedAuth, setCheckedAuth] = useState(false);
   const [grades, setGrades] = useState([]);
@@ -140,4 +139,3 @@ function GradePage() {
     </>
   );
 }
-export default withAuth(GradePage);
