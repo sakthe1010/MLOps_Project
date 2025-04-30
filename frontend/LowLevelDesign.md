@@ -27,8 +27,7 @@
 **Purpose:** Register a new user
 
 ### Request (Form Data)
-json
-```
+```json
 {
   "username": "user@example.com",
   "password": "user_password",
@@ -36,8 +35,7 @@ json
 }
 ```
 ### Response
-json
-```
+```json
 {
   "message": "Registration successful"
 }
@@ -48,8 +46,7 @@ json
 **Purpose:** Get available class list
 
 ### Response
-json
-```
+```json
 {
   "classes": [6, 7, 8, 9, 10]
 }
@@ -63,8 +60,7 @@ json
 class: number (e.g. 10)
 
 ### Response
-json
-```
+```json
 {
   "subjects": ["math", "science", "english"]
 }
@@ -79,8 +75,7 @@ class: number
 subject: string
 
 ### Response
-json
-```
+```json
 {
   "chapters": ["Chapter 1: Real Numbers", "Chapter 2: Polynomials"]
 }
@@ -91,8 +86,7 @@ json
 **Purpose:** Generate MCQs using OpenAI API based on user config
 
 ### Request
-json
-```
+```json
 {
   "class_": "10",
   "subject": "science",
@@ -107,8 +101,7 @@ json
 }
 ```
 ### Response
-json
-```
+```json
 {
   "mcqs": [
     {
@@ -126,9 +119,8 @@ json
 ## 7. POST /api/user/report
 **Purpose:** Store the result of a completed test
 
-Request
-json
-```
+### Request
+```json
 {
   "username": "alice",
   "mode": "practice",
@@ -149,8 +141,7 @@ json
 ```
 
 ### Response
-json
-```
+```json
 {
   "id": "report-uuid"
 }
@@ -164,8 +155,7 @@ json
 username: string
 
 ### Response
-json
-```
+```json
 [
   {
     "id": "report-id",
@@ -187,8 +177,7 @@ json
 id: string (UUID)
 
 ### Response
-json
-```
+```json
 {
   "id": "...",
   "username": "alice",
@@ -212,8 +201,7 @@ json
 **Purpose:** Returns flattened list of all wrong questions by user
 
 ### Response
-json
-```
+```json
 [
   {
     "question": "What is refraction?",
