@@ -2,22 +2,21 @@ Here’s a high-level architecture diagram showing all of your services, plus th
 
 ```mermaid
 flowchart LR
-  subgraph Docker Compose Stack
-    style Docker Compose Stack fill:#f9f,stroke:#333,stroke-width:1px
+    subgraph DockerComposeStack
+        direction LR
+        Client[Web / Mobile Client]
+        FastAPI["FastAPI Service\n(Uvicorn + app.main)"]
+        Postgres[(PostgreSQL\nmcq_db)]
+        Prometheus[(Prometheus\n(scrapes /metrics))]
+        Grafana[(Grafana\n(visual dashboards))]
+        Airflow["Airflow Scheduler & DAGs\n(ncert_pipeline_dag.py)\nupdates ncert_dataset.jsonl daily"]
+    end
 
-    CLIENT[Web / Mobile Client]
-    FASTAPI[FastAPI Service<br/>(Uvicorn + app.main)]
-    POSTGRES[(PostgreSQL<br/>mcq_db)]
-    AIRFLOW[Airflow Scheduler & DAGs<br/>(ncert_pipeline_dag.py)<br/>→ updates ncert_dataset.jsonl daily]
-    PROM[Prometheus<br/>(scrapes /metrics)]
-    GRAF[Grafana<br/>(visual dashboards)]
-  end
-
-  CLIENT -- “POST/GET HTTP” → FASTAPI
-  FASTAPI -- “reads/writes” → POSTGRES
-  FASTAPI -- “/metrics” → PROM
-  PROM -- “Scrape & store” → GRAF
-  AIRFLOW -. “shared volume” .-> FASTAPI
+    Client --> FastAPI
+    FastAPI --> Postgres
+    FastAPI --> Prometheus
+    Prometheus --> Grafana
+    Airflow -. shared volume .-> FastAPI
 ```
 
 - **FastAPI Service**  
