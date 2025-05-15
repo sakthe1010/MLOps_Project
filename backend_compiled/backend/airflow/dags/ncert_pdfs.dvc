@@ -1,0 +1,6 @@
+outs:
+- md5: 90645cee01ebcb541b4ee866e95edba6.dir
+  size: 1373781872
+  nfiles: 526
+  hash: md5
+  path: ncert_pdfs

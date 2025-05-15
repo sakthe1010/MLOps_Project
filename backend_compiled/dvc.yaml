@@ -1,0 +1,22 @@
+stages:
+  preprocess:
+    cmd: python backend/airflow/dags/step1.py
+    deps:
+    - backend/airflow/dags/ncert_pdfs
+    outs:
+    - data/01_clean.jsonl
+  split:
+    cmd: python backend/airflow/dags/step2.py
+    deps:
+    - data/01_clean.jsonl
+    outs:
+    - data/02_dataset
+  train:
+    cmd: python backend/model/train.py
+    deps:
+    - data/02_dataset
+    outs:
+    - models/latest/model.pt
+    metrics:
+    - models/latest/metrics.json:
+        cache: false

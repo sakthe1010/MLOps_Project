@@ -1,0 +1,17 @@
+api_key_env_var: "GEMINI_API_KEY"
+
+pro_model: "gemini-1.5-pro-latest"
+flash_model: "gemini-1.5-flash-latest"
+
+target_class: "10"
+target_subject: "math"
+target_chapter: "Chapter 10: circles"
+
+generate_mcqs_count: 20
+select_mcqs_count: 10
+
+sleep_between_calls: 1.5
+max_retries: 3
+
+input_file: "../airflow/dags/ncert_dataset.jsonl"
+output_file: "mcqs_generated.json"

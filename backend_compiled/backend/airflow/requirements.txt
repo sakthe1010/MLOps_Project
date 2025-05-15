@@ -1,0 +1,8 @@
+# PDF + DB
+PyPDF2
+pdfplumber
+requests
+beautifulsoup4
+PyYAML
+SQLAlchemy
+# any others your scripts need…

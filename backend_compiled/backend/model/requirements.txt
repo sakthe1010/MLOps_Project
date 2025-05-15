@@ -1,0 +1,15 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+python-jose[cryptography]
+passlib[bcrypt]
+PyYAML
+python-dotenv
+google-generativeai
+starlette-exporter
+prometheus-client
+pydantic
+python-multipart
+pytest
+httpx
